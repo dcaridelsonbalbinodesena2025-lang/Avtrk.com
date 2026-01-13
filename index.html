@@ -191,29 +191,36 @@
                 }
             }
         } else {
-            verificarPadroes();
-        }
-        document.getElementById('count-g-geral').innerText = totalGreenGeral;
-        document.getElementById('count-r-geral').innerText = totalRedGeral;
-        renderGrade(); atualizarTendencia(); limpar();
-    }
-
-    function verificarPadroes() {
+                function verificarPadroes() {
         const seq = historico.map(h => h.t).join('');
         let achou = false;
+        
+        // Captura o valor numérico da Força G atual
+        const forcaTexto = document.getElementById('tend-forca').innerText;
+        const forcaValor = parseInt(forcaTexto.replace('%', ''));
+
         meusPadroes.forEach(item => {
-            if(seq.startsWith(item.p)) {
+            // Nova condição: O padrão deve bater E a Força G deve ser >= 40
+            if(seq.startsWith(item.p) && forcaValor >= 40) {
                 achou = true; sinalAtivo = true; galeAtual = 0;
                 setStatus("ENTRAR: 1.50x 🚀", "var(--cor-alerta)");
                 setMsgAux("SINAL CONFIRMADO", "var(--cor-alerta)");
                 animarRocket('voo');
             }
         });
+
         if(!achou) {
-            setStatus("ANALISANDO...", "var(--cor-verde)");
-            setMsgAux("ANALISANDO MERCADO", "#0000ff");
+            // Se o padrão foi encontrado mas a força é baixa, ele avisa
+            if (seq.startsWith(meusPadroes[0]?.p) && forcaValor < 40) {
+                 setStatus("FORÇA BAIXA (G < 40%)", "var(--cor-vermelha)");
+                 setMsgAux("PADRÃO OK, MAS RISCO ALTO", "var(--cor-vermelha)");
+            } else {
+                 setStatus("ANALISANDO...", "var(--cor-verde)");
+                 setMsgAux("ANALISANDO MERCADO", "#0000ff");
+            }
         }
     }
+
 
     function setStatus(txt, cor) {
         const s = document.getElementById('status-display');
