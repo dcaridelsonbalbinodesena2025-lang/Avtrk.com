@@ -7,11 +7,11 @@
     <style>
         :root {
             --aviator-azul: #3498db; --aviator-roxo: #9b59b6; --aviator-rosa: #e91e63;
-            --cor-verde: #0ecb81; --cor-vermelha: #d91d3a; --cor-alerta: #f39c12;
+            --cor-verde: #008000; --cor-vermelha: #d91d3a; --cor-alerta: #f39c12;--cor-lime:#00FF00;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Arial Black', sans-serif; }
-        body { background: #000; display: flex; flex-direction: column; align-items: center; height: 92vh; overflow: hidden; color: white; }
+        body { background: #000; display: flex; flex-direction: column; align-items: center; height: 95vh; overflow: hidden; color: white; }
 
         .topo-info { display: flex; width: 100%; height: 40px; background: #111; border-bottom: 2px solid #333; }
         .placar-geral { width: 50%; display: flex; justify-content: center; align-items: center; gap: 15px; font-size: 1.1rem; border-right: 1px solid #333; }
@@ -19,61 +19,49 @@
         .cronometro-box { width: 50%; display: flex; justify-content: center; align-items: center; gap: 10px; font-size: 1.1rem; }
 
         .calculadora {
-            width: 95vw; max-width: 460px; height: 95vh; background: #1a1a1a;
+            width: 95vw; max-width: 460px; height: 98vh; background: #1a1a1a;
             border-radius: 20px; border: 2px solid #333; padding: 8px;
             display: flex; flex-direction: column; position: relative;
         }
 
         .stage-animacao {
-            width: 100%; height: 180px; background: radial-gradient(circle at bottom, #1a0a2e 0%, #000 100%);
+            width: 100%; height: 160px; background: radial-gradient(circle at bottom, #1a0a2e 0%, #000 100%);
             border-radius: 12px; margin-bottom: 8px; position: relative; overflow: hidden; border: 1px solid #333;
         }
         #svg-grafico { position: absolute; bottom: 0; left: 0; width: 100%; height: 100%; overflow: visible; }
-        #curva-line { fill: none; stroke: var(--cor-vermelha); stroke-width: 5; stroke-linecap: round; transition: d 1.5s cubic-bezier(0.1, 0, 0.3, 1), stroke 0.3s, opacity 0.4s; opacity: 0; }
-        #curva-fill { fill: url(#grad); opacity: 0; transition: d 1.5s cubic-bezier(0.1, 0, 0.3, 1), opacity 0.4s; }
+        
+        /* ESTILO DA LINHA E DA SOMBRA */
+        #curva-line { fill: none; stroke: var(--cor-vermelha); stroke-width: 5; stroke-linecap: round; opacity: 0; transition: opacity 0.4s; z-index: 10; }
+        #curva-fill { fill: url(#grad); opacity: 0; transition: opacity 0.4s; }
         
         #rocket-box { position: absolute; width: 45px; height: 45px; left: 10px; bottom: 0px; z-index: 30; display: flex; align-items: center; justify-content: center; font-size: 35px; transition: all 1.5s cubic-bezier(0.1, 0, 0.3, 1); filter: grayscale(1); opacity: 0; }
         
         .no-transition { transition: none !important; }
         .fly-away { transform: translate(500px, -500px) rotate(-20deg) scale(1.2) !important; opacity: 0 !important; transition: transform 0.7s cubic-bezier(0.4, 0, 1, 1), opacity 0.4s !important; }
 
-        /* GRADE E VELAS */
-        .grade { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 8px; min-height: 84px; }
-        .vela { background: #222; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: bold; height: 26px; border: 0.5px solid #444; color: white; transition: all 0.3s; }
+        .grade { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 8px; min-height: 86px; }
+        .vela { background: #222; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; height: 24px; border: 0.5px solid #444; color: white; transition: all 0.3s; }
         .v-azul { background: #003247 !important; } 
         .v-roxo { background: #6441a5 !important; } 
         .v-rosa { background: #bf279b !important; }
 
-        /* EFEITO DE BRILHO NO PADRÃO */
-        .brilho-padrao {
-            animation: pulse-border 0.8s infinite alternate;
-            border: 2px solid #fff !important;
-            box-shadow: 0 0 10px #fff, inset 0 0 5px #fff;
-            transform: scale(1.05);
-            z-index: 10;
-        }
+        .brilho-padrao { animation: pulse-border 0.8s infinite alternate; border: 2px solid #fff !important; box-shadow: 0 0 10px #fff; transform: scale(1.05); z-index: 10; }
+        @keyframes pulse-border { from { box-shadow: 0 0 5px #fff; } to { box-shadow: 0 0 15px #fff; } }
 
-        @keyframes pulse-border {
-            from { box-shadow: 0 0 5px #fff; border-color: #ccc; }
-            to { box-shadow: 0 0 15px #fff; border-color: #fff; }
-        }
-
-        .painel-status { text-align: center; padding: 8px; background: #000; border-radius: 10px; border: 1px solid #333; margin-bottom: 8px; }
-        #status-display { color: var(--cor-verde); font-weight: bold; font-size: 1.2rem; text-transform: uppercase; }
+        .painel-status { text-align: center; padding: 6px; background: #000; border-radius: 10px; border: 1px solid #333; margin-bottom: 8px; }
+        #status-display { color: var(--cor-verde); font-weight: bold; font-size: 1.1rem; text-transform: uppercase; }
 
         .visor { background: #000; border: 1px solid #444; border-radius: 8px; height: 32px; display: flex; align-items: center; justify-content: center; color: var(--cor-verde); font-size: 1.2rem; }
 
-        .teclado-grid { display: grid; grid-template-columns: repeat(3, 1fr) 1.2fr; gap: 5px; }
-        .btn-n { background: #333; color: white; border: none; border-radius: 8px; font-size: 1.5rem; cursor: pointer; height: 42px; }
-        .btn-c { background: var(--cor-vermelha); color: white; border: none; border-radius: 8px; font-size: 1.5rem; cursor: pointer; }
-        .btn-acao { border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; color: white; font-size: 0.75rem; }
-        .btn-entrar { grid-row: span 2; background: var(--cor-verde); color: #000; font-size: 1.1rem; }
+        .teclado-grid { display: grid; grid-template-columns: repeat(3, 1fr) 1.2fr; gap: 4px;}
+        .btn-n { background: #333; color: white; border: none; border-radius: 8px; font-size: 1.4rem; cursor: pointer; height: 45px; }
+        .btn-c { background: var(--cor-vermelha); color: white; border: none; border-radius: 8px; font-size: 1.4rem; cursor: pointer; }
+        .btn-acao { border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; color: white; font-size: 0.7rem; }
+        .btn-entrar { grid-row: span 2; background: var(--cor-verde); color: #000; font-size: 1rem; }
 
         .tendencia-box { background: #000; padding: 5px 12px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; border-left: 4px solid var(--aviator-azul); align-items: center;}
-        
         .tab-content { display: none; flex-direction: column; height: 100%; padding: 10px; overflow-y: auto; }
         .tab-content.active { display: flex; }
-        
         #modal-config { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 3000; display: none; flex-direction: column; padding: 20px; }
     </style>
 </head>
@@ -106,7 +94,7 @@
                         <stop offset="100%" style="stop-color:var(--cor-vermelha);stop-opacity:0" />
                     </linearGradient>
                 </defs>
-                <path id="curva-fill" d="M 0 120 Q 150 130 280 40"></path>
+                <path id="curva-fill" d="M 0 120 Q 150 130 280 40 L 280 120 L 0 120 Z"></path>
                 <path id="curva-line" d="M 0 120 Q 150 130 280 40"></path>
             </svg>
             <div id="rocket-box">🚀</div>
@@ -141,8 +129,8 @@
             <button class="btn-c" onclick="limpar()">C</button>
             <button class="btn-n" onclick="add('0')">0</button>
             <button class="btn-n" onclick="add('.')">.</button>
-            <button class="btn-acao" style="background:#007bff; grid-column: span 3; height: 40px;" onclick="abrirHistorico()">VER HISTÓRICO</button>
-            <button class="btn-acao" style="background:#c0392b; height: 40px;" onclick="apagarDadosGerais()">DEL</button>
+            <button class="btn-acao" style="background:#007bff; grid-column: span 3; height: 38px;" onclick="abrirHistorico()">VER HISTÓRICO</button>
+            <button class="btn-acao" style="background:#c0392b; height: 38px;" onclick="apagarDadosGerais()">DEL</button>
         </div>
     </div>
 
@@ -165,7 +153,7 @@
 
     function setMsgAux(txt, cor) {
         const box = document.getElementById('msg-analisador-azul');
-        box.innerText = txt; box.style.background = cor;
+        box.innerText = txt; box.style.background = cor;box.style.color = "#000";
     }
 
     function confirmar() {
@@ -177,13 +165,15 @@
 
         if(sinalAtivo) {
             if(v >= 1.50) { 
-                totalGreenGeral++; sinalAtivo = false; animarRocket('finish', 'var(--cor-verde)');
+                totalGreenGeral++; sinalAtivo = false; 
+                animarRocket('finish', 'var(--cor-verde)');
                 setStatus("GREEN! ✅", "var(--cor-verde)"); setMsgAux("GREEN NO ALVO!", "var(--cor-verde)");
                 logSinais.unshift({res: 'GREEN', val: v, gale: galeAtual});
             } else {
                 galeAtual++;
                 if (galeAtual > 1) {
-                    totalRedGeral++; sinalAtivo = false; animarRocket('finish', 'var(--cor-vermelha)');
+                    totalRedGeral++; sinalAtivo = false; 
+                    animarRocket('finish', 'var(--cor-vermelha)');
                     setStatus("RED ❌", "var(--cor-vermelha)"); setMsgAux("LIMITE GALE", "var(--cor-vermelha)");
                     logSinais.unshift({res: 'RED', val: v, gale: galeAtual-1});
                 } else { 
@@ -206,13 +196,13 @@
 
         meusPadroes.forEach(item => {
             if(seq.startsWith(item.p)) {
-                numVelasBrilhar = item.p.length; // Guarda o tamanho do padrão para fazer brilhar
+                numVelasBrilhar = item.p.length;
                 if(valorForca >= 40) {
                     sinalAtivo = true; galeAtual = 0;
-                    setStatus("ENTRAR: 1.50x 🚀", "var(--cor-alerta)"); setMsgAux("SINAL CONFIRMADO", "var(--cor-alerta)");
-                    animarRocket('voo');
+                    setStatus("ENTRAR: 1.50x 🚀", "var(--cor-alerta)"); setMsgAux("SINAL CONFIRMADO", "var(--cor-lime)");
+                    animarRocket('voo', 'var(--cor-alerta)');
                 } else {
-                    setStatus("FORÇA BAIXA", "var(--cor-vermelha)"); setMsgAux("AGUARDANDO 40%", "var(--cor-vermelha)");
+                    setStatus("FORÇA BAIXA", "var(--cor-vermelha)"); setMsgAux("FORÇA G < 40%", "var(--cor-vermelha)");
                 }
             }
         });
@@ -229,7 +219,6 @@
             if(historico[i]) {
                 velaDiv.className += ' ' + historico[i].c;
                 velaDiv.innerText = historico[i].v;
-                // APLICA O BRILHO SE FIZER PARTE DO PADRÃO ENCONTRADO
                 if(i < numVelasBrilhar) { velaDiv.classList.add('brilho-padrao'); }
             }
             g.appendChild(velaDiv);
@@ -246,7 +235,40 @@
         document.getElementById('tend-txt').innerText = f > 60 ? "ALTA" : (f < 30 ? "BAIXA" : "ESTÁVEL");
     }
 
-    // SUPORTE
+    function animarRocket(estado, cor) {
+        const box = document.getElementById('rocket-box');
+        const line = document.getElementById('curva-line');
+        const fill = document.getElementById('curva-fill');
+        const stopTop = document.getElementById('stop-top');
+
+        if(estado === 'voo') {
+            box.classList.remove('no-transition', 'fly-away');
+            box.style.opacity = "1"; 
+            line.style.opacity = "1"; 
+            fill.style.opacity = "1";
+            box.style.left = '269px'; box.style.bottom = '100px'; 
+            box.style.filter = `drop-shadow(0 0 20px ${cor}) brightness(1.5)`;
+            line.style.stroke = cor;
+            stopTop.style.stopColor = cor; // Muda a cor da sombra
+        } else {
+            box.style.filter = `drop-shadow(0 0 30px ${cor}) brightness(2)`;
+            line.style.stroke = cor;
+            stopTop.style.stopColor = cor;
+            setTimeout(() => {
+                box.classList.add('fly-away');
+                setTimeout(() => {
+                    box.classList.add('no-transition');
+                    box.style.opacity = "0"; 
+                    line.style.opacity = "0"; 
+                    fill.style.opacity = "0";
+                    box.style.left = '10px'; box.style.bottom = '0px'; 
+                    box.style.filter = 'grayscale(1)';
+                }, 700);
+            }, 500);
+        }
+    }
+
+    // FUNÇÕES COMPLEMENTARES (Visor, Histórico, etc)
     function carregarTudo() { meusPadroes = JSON.parse(localStorage.getItem('aviator_p_v4')) || [{p: "PPG"}]; renderGrade(); }
     function add(n) { if(digitacao.length < 5) { digitacao += n; document.getElementById('visor-val').innerText = digitacao; } }
     function limpar() { digitacao = ""; document.getElementById('visor-val').innerText = "0.00"; }
@@ -256,16 +278,11 @@
     function abrirHistorico() { switchTab('hist'); document.getElementById('lista-greens-layout').innerHTML = logSinais.map(l => `<div style="background:#222; padding:8px; margin-bottom:5px; border-left:4px solid ${l.res==='GREEN'?'green':'red'}">${l.res} - Gale ${l.gale}</div>`).join(''); }
     function abrirInfo() { switchTab('analise'); const t=totalGreenGeral+totalRedGeral; document.getElementById('sugestao-final').innerText = `Assertividade: ${t>0?((totalGreenGeral/t)*100).toFixed(1):0}%`; }
     function toggleCrono() { if(cronoInterval){clearInterval(cronoInterval);cronoInterval=null;}else{cronoInterval=setInterval(()=>{tempoSeg++;let h=Math.floor(tempoSeg/3600).toString().padStart(2,'0'),m=Math.floor((tempoSeg%3600)/60).toString().padStart(2,'0'),s=(tempoSeg%60).toString().padStart(2,'0');document.getElementById('display-crono').innerText=`${h}:${m}:${s}`;},1000);}}
-    function apagarDadosGerais() { if(confirm("Limpar?")){historico=[];logSinais=[];totalGreenGeral=0;totalRedGeral=0;renderGrade();}}
+    function apagarDadosGerais() { if(confirm("Limpar tudo?")){historico=[];logSinais=[];totalGreenGeral=0;totalRedGeral=0;renderGrade();document.getElementById('count-g-geral').innerText=0;document.getElementById('count-r-geral').innerText=0;}}
     function abrirConfig() { document.getElementById('modal-config').style.display='flex'; renderConfig(); }
     function fecharConfig() { document.getElementById('modal-config').style.display='none'; }
     function renderConfig() { document.getElementById('lista-config').innerHTML = meusPadroes.map((p,i)=>`<div style="display:flex; justify-content:space-between; padding:8px; background:#222; margin-bottom:2px;">${p.p} <button onclick="meusPadroes.splice(${i},1);renderConfig();localStorage.setItem('aviator_p_v4', JSON.stringify(meusPadroes))">X</button></div>`).join(''); }
     function salvarNovoPadrao() { const val = document.getElementById('novo-p-input').value.toUpperCase().replace(/[^PG]/g, ''); if(val){meusPadroes.push({p:val}); renderConfig(); localStorage.setItem('aviator_p_v4', JSON.stringify(meusPadroes)); document.getElementById('novo-p-input').value='';}}
-    function animarRocket(estado, cor='red') {
-        const box = document.getElementById('rocket-box'); const line = document.getElementById('curva-line');
-        if(estado==='voo'){ box.classList.remove('no-transition','fly-away'); box.style.opacity="1"; line.style.opacity="1"; box.style.left='269px'; box.style.bottom='100px'; line.style.stroke=cor;
-        } else { setTimeout(()=>{box.classList.add('fly-away'); setTimeout(()=>{box.classList.add('no-transition'); box.style.opacity="0"; box.style.left='10px'; box.style.bottom='0px'; line.style.opacity="0";},700);},500); }
-    }
 </script>
 </body>
 </html>
