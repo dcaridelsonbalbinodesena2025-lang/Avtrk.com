@@ -1,4 +1,4 @@
-<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+l<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
@@ -32,12 +32,9 @@
         #curva-line { fill: none; stroke: var(--cor-vermelha); stroke-width: 5; stroke-linecap: round; transition: d 1.5s cubic-bezier(0.1, 0, 0.3, 1), stroke 0.3s, opacity 0.4s; opacity: 0; }
         #curva-fill { fill: url(#grad); opacity: 0; transition: d 1.5s cubic-bezier(0.1, 0, 0.3, 1), opacity 0.4s; }
         
-        /* FOGUETE COM TRANSIÇÃO */
         #rocket-box { position: absolute; width: 45px; height: 45px; left: 10px; bottom: 0px; z-index: 30; display: flex; align-items: center; justify-content: center; font-size: 35px; transition: all 1.5s cubic-bezier(0.1, 0, 0.3, 1); filter: grayscale(1); opacity: 0; }
         
-        /* CLASSE PARA RESETAR SEM VOLTAR DE RÉ */
         .no-transition { transition: none !important; }
-
         .fly-away { transform: translate(500px, -500px) rotate(-20deg) scale(1.2) !important; opacity: 0 !important; transition: transform 0.7s cubic-bezier(0.4, 0, 1, 1), opacity 0.4s !important; }
 
         .grade { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 8px; }
@@ -191,36 +188,45 @@
                 }
             }
         } else {
-                function verificarPadroes() {
+            verificarPadroes();
+        }
+        document.getElementById('count-g-geral').innerText = totalGreenGeral;
+        document.getElementById('count-r-geral').innerText = totalRedGeral;
+        renderGrade(); atualizarTendencia(); limpar();
+    }
+
+    // FUNÇÃO ALTERADA COM A TRAVA DE FORÇA G >= 40%
+    function verificarPadroes() {
         const seq = historico.map(h => h.t).join('');
-        let achou = false;
+        let achouPadrão = false;
         
-        // Captura o valor numérico da Força G atual
-        const forcaTexto = document.getElementById('tend-forca').innerText;
-        const forcaValor = parseInt(forcaTexto.replace('%', ''));
+        // Pega o valor da Força G e converte em número
+        const textoForca = document.getElementById('tend-forca').innerText;
+        const valorForca = parseInt(textoForca.replace('%', '')) || 0;
 
         meusPadroes.forEach(item => {
-            // Nova condição: O padrão deve bater E a Força G deve ser >= 40
-            if(seq.startsWith(item.p) && forcaValor >= 40) {
-                achou = true; sinalAtivo = true; galeAtual = 0;
-                setStatus("ENTRAR: 1.50x 🚀", "var(--cor-alerta)");
-                setMsgAux("SINAL CONFIRMADO", "var(--cor-alerta)");
-                animarRocket('voo');
+            if(seq.startsWith(item.p)) {
+                achouPadrão = true;
+                // Só ativa se a força for >= 40
+                if(valorForca >= 40) {
+                    sinalAtivo = true; 
+                    galeAtual = 0;
+                    setStatus("ENTRAR: 1.50x 🚀", "var(--cor-alerta)");
+                    setMsgAux("SINAL CONFIRMADO", "var(--cor-alerta)");
+                    animarRocket('voo');
+                } else {
+                    // Padrão existe mas força é baixa
+                    setStatus("AGUARDANDO FORÇA", "var(--cor-vermelha)");
+                    setMsgAux("FORÇA G BAIXA ("+valorForca+"%)", "var(--cor-vermelha)");
+                }
             }
         });
 
-        if(!achou) {
-            // Se o padrão foi encontrado mas a força é baixa, ele avisa
-            if (seq.startsWith(meusPadroes[0]?.p) && forcaValor < 40) {
-                 setStatus("FORÇA BAIXA (G < 40%)", "var(--cor-vermelha)");
-                 setMsgAux("PADRÃO OK, MAS RISCO ALTO", "var(--cor-vermelha)");
-            } else {
-                 setStatus("ANALISANDO...", "var(--cor-verde)");
-                 setMsgAux("ANALISANDO MERCADO", "#0000ff");
-            }
+        if(!achouPadrão) {
+            setStatus("ANALISANDO...", "var(--cor-verde)");
+            setMsgAux("ANALISANDO MERCADO", "#0000ff");
         }
     }
-
 
     function setStatus(txt, cor) {
         const s = document.getElementById('status-display');
@@ -242,7 +248,7 @@
         const stop = document.getElementById('stop-top');
         
         if(estado === 'voo') {
-            box.classList.remove('no-transition'); // GARANTE QUE VOLTE A ANIMAR
+            box.classList.remove('no-transition');
             box.classList.remove('fly-away'); 
             box.style.opacity = "1";
             line.style.opacity = "1"; 
@@ -270,23 +276,17 @@
     function resetRocket() {
         const box = document.getElementById('rocket-box');
         const line = document.getElementById('curva-line');
-        
-        // CORREÇÃO AQUI: ADICIONA NO-TRANSITION PARA VOLTAR SEM RE
         box.classList.add('no-transition');
         box.classList.remove('fly-away');
         box.style.opacity = "0"; 
-        
-        // VOLTA PARA O INÍCIO INSTANTANEAMENTE
         box.style.left = '10px'; 
         box.style.bottom = '0px'; 
         box.style.transform = 'rotate(0deg)'; 
         box.style.filter = 'grayscale(1)';
-        
         line.setAttribute('d', 'M 0 120 Q 0 120 0 120');
         line.style.opacity = "0";
     }
 
-    // --- MANTENDO O RESTANTE DO CÓDIGO IGUAL ---
     function carregarTudo() {
         const s = localStorage.getItem('aviator_p_v4');
         meusPadroes = s ? JSON.parse(s) : [{p: "PPG"}];
@@ -320,12 +320,20 @@
         document.getElementById('sugestao-final').innerHTML = `<b>ASSERTIVIDADE:</b> ${assert}% <br><b>GREENS:</b> ${totalGreenGeral} | <b>REDS:</b> ${totalRedGeral} <br><br><b>ÚLTIMAS 10 VELAS:</b><br>Azuis (< 2x): ${azuis}<br>Altas (> 2x): ${10 - azuis}<br><br><b>DICA:</b> ${azuis > 7 ? "Mercado RUIM" : "Mercado BOM"}`;
     }
     function switchTab(t) { document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); document.getElementById('tab-'+t).classList.add('active'); }
+    
     function atualizarTendencia() {
         if(historico.length < 5) return;
         const greens = historico.slice(0, 10).filter(h => parseFloat(h.v) >= 2.0).length;
-        document.getElementById('tend-forca').innerText = (greens * 10) + "%";
+        const forcaCalculada = (greens * 10) + "%";
+        document.getElementById('tend-forca').innerText = forcaCalculada;
         document.getElementById('tend-txt').innerText = greens > 6 ? "ALTA" : (greens < 4 ? "BAIXA" : "ESTÁVEL");
+        
+        // Muda a cor da porcentagem para ajudar visualmente
+        const spanForca = document.getElementById('tend-forca');
+        if(greens * 10 >= 40) { spanForca.style.color = "var(--cor-verde)"; } 
+        else { spanForca.style.color = "var(--cor-vermelha)"; }
     }
+
     function toggleCrono() {
         if(cronoInterval) { clearInterval(cronoInterval); cronoInterval = null; document.getElementById('btn-crono').innerText = "▶️"; }
         else { cronoInterval = setInterval(() => { tempoSeg++; atualizarCrono(); }, 1000); document.getElementById('btn-crono').innerText = "⏸️"; }
