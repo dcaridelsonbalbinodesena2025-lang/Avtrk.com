@@ -1,0 +1,246 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Snipe Pro - K.C⚽️M</title>
+    <style>
+        :root {
+            --bg: #0b0e11; --card: #181a20; --red: #d91d3a; --orange: #f39c12; --green: #0ecb81;
+        }
+
+        body { background: var(--bg); color: #fff; font-family: sans-serif; margin: 0; overflow: hidden; display: flex; flex-direction: column; height: 92vh; }
+
+        .header { display: grid; grid-template-columns: repeat(4, 1fr); padding: 5px; background: var(--card); border-bottom: 1px solid #333; text-align: center; }
+        .score-num { font-size: 22px; font-weight: bold; display: block; }
+        .score-label { font-size: 10px; color: #848e9c; }
+
+        .historico-container { 
+            height: 100px; padding: 5px; display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; 
+            background: #080a0d; overflow-y: auto; align-content: start;
+        }
+        .vela-item { padding: 6px 0; display: flex; align-items: center; justify-content: center; border-radius: 4px; font-weight: bold; font-size: 16px; background: #1e2329; border: 1px solid rgba(255,255,255,0.1); }
+
+        .status-area { 
+            flex: 1; background: radial-gradient(circle at bottom, #1a0a2e 0%, #000 100%); 
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border-top: 2px solid #222; position: relative; overflow: hidden;
+        }
+        
+        .balao { 
+            width: 85%; padding: 12px; border-radius: 12px; text-align: center; 
+            font-weight: 900; font-size: 25px; text-transform: uppercase;
+            background: rgba(15, 15, 15, 0.9); border: 2px solid #333; margin-bottom: 10px; z-index: 25;
+        }
+
+        .game-stage { width: 100%; height: 180px; position: relative; }
+        #svg-grafico { position: absolute; bottom: 0; left: 0; width: 100%; height: 100%; overflow: visible; }
+        
+        #curva-line { 
+            fill: none; stroke: var(--red); stroke-width: 5; stroke-linecap: round;
+            transition: d 1.5s cubic-bezier(0.1, 0, 0.3, 1), stroke 0.3s, opacity 0.4s; 
+        }
+        #curva-fill { 
+            fill: url(#grad); opacity: 0;
+            transition: d 1.5s cubic-bezier(0.1, 0, 0.3, 1), opacity 0.4s;
+        }
+
+        #rocket-box {
+            position: absolute; width: 50px; height: 50px; left: 10px; bottom: 0px; z-index: 30;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 50px; transition: all 1.5s cubic-bezier(0.1, 0, 0.3, 1);
+        }
+
+        .rocket-anim { animation: tremor 0.1s infinite alternate; }
+        @keyframes tremor { from { transform: translate(0,0); } to { transform: translate(1px, 1px); } }
+
+        .fly-away { 
+            transform: translate(500px, -500px) rotate(-35deg) scale(1.2) !important; 
+            opacity: 0 !important; 
+            transition: transform 0.7s cubic-bezier(0.4, 0, 1, 1), opacity 0.4s !important; 
+        }
+
+        .teclado { background: var(--card); padding: 15px; border-top: 1px solid #333; }
+        .logo-container { text-align: right; margin-bottom: 5px; padding-right: 10px; font-family: 'Arial Black', sans-serif; font-size: 29px; font-weight: 900; color: #007bff; text-shadow: 0 0 8px #fff; }
+        .display { background: #000; color: #f0b90b; padding: 12px; text-align: right; font-size: 26px; border-radius: 6px; margin-bottom: 10px; font-family: monospace; border: 1px solid #444; }
+        .btn-grid { display: grid; grid-template-columns: 3fr 1.2fr; gap: 8px; }
+        .num-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+        .btn { background: #2b2f36; border: none; color: #fff; padding: 18px 0; font-size: 24px; font-weight: bold; border-radius: 8px; }
+        .btn-clear-all { background: #444; color: #fff; font-size: 11px; text-transform: uppercase; margin-bottom: 8px; height: 60px; line-height: 1.2; border: none; border-radius: 8px; }
+        .btn-ok { background: var(--green); color: #000; font-weight: 900; flex: 1; border: none; border-radius: 8px; font-size: 22px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div><span class="score-num" id="sd" style="color:var(--green)">0</span><span class="score-label">GREEN</span></div>
+        <div><span class="score-num" id="sg" style="color:#3498db">0</span><span class="score-label">GALE</span></div>
+        <div><span class="score-num" id="sr" style="color:var(--red)">0</span><span class="score-label">RED</span></div>
+        <div><span class="score-num" id="st">0</span><span class="score-label">TOTAL</span></div>
+    </div>
+
+    <div class="historico-container" id="hist"></div>
+
+    <div class="status-area">
+        <div id="status" class="balao" style="color: #848e9c;">SISTEMA PRONTO</div>
+        <div class="game-stage">
+            <svg id="svg-grafico" viewBox="0 0 300 120">
+                <defs>
+                    <linearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" id="stop-top" style="stop-color:var(--red);stop-opacity:0.6" />
+                        <stop offset="100%" style="stop-color:var(--red);stop-opacity:0" />
+                    </linearGradient>
+                </defs>
+                <path id="curva-fill" d="M 0 120 Q 0 120 0 120"></path>
+                <path id="curva-line" d="M 0 120 Q 0 120 0 120"></path>
+            </svg>
+            <div id="rocket-box" class="rocket-anim">🚀</div>
+        </div>
+    </div>
+
+    <div class="teclado">
+        <div class="logo-container">K.C⚽️M🚀</div>
+        <div class="display" id="disp">0.00</div>
+        <div class="btn-grid">
+            <div class="num-pad">
+                <button class="btn" onclick="add('7')">7</button><button class="btn" onclick="add('8')">8</button><button class="btn" onclick="add('9')">9</button>
+                <button class="btn" onclick="add('4')">4</button><button class="btn" onclick="add('5')">5</button><button class="btn" onclick="add('6')">6</button>
+                <button class="btn" onclick="add('1')">1</button><button class="btn" onclick="add('2')">2</button><button class="btn" onclick="add('3')">3</button>
+                <button class="btn" style="color:var(--red)" onclick="clr()">C</button><button class="btn" onclick="add('0')">0</button><button class="btn" onclick="add('.')">.</button>
+            </div>
+            <div style="display: flex; flex-direction: column;">
+                <button class="btn btn-clear-all" onclick="resetTudo()">Limpar<br>Tudo</button>
+                <button class="btn btn-ok" onclick="confirmar()">OK</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    let velas = [], input = "", s = {d:0, g:0, r:0}, emSinal = false, gale = 0, alvo = 1.50;
+
+    function add(n) { input += n; document.getElementById('disp').innerText = input; }
+    function clr() { input = ""; document.getElementById('disp').innerText = "0.00"; }
+    
+    function resetTudo() { 
+        if(confirm("Zerar placares e histórico?")) { 
+            velas = []; s = {d:0, g:0, r:0}; emSinal = false; gale = 0;
+            resetPos(); setBalao("text", "SISTEMA REINICIADO"); render(); 
+        } 
+    }
+
+    function animar(estado, corDesejada = 'var(--red)') {
+        const box = document.getElementById('rocket-box');
+        const line = document.getElementById('curva-line');
+        const fill = document.getElementById('curva-fill');
+        const stop = document.getElementById('stop-top');
+
+        if(estado === 'voo') {
+            box.style.transition = "all 1.5s cubic-bezier(0.1, 0, 0.3, 1)";
+            line.style.transition = "d 1.5s cubic-bezier(0.1, 0, 0.3, 1), stroke 0.3s, opacity 0.4s";
+            fill.style.transition = "d 1.5s cubic-bezier(0.1, 0, 0.3, 1), opacity 0.4s";
+            box.classList.remove('fly-away');
+            line.style.opacity = "1"; fill.style.opacity = "0";
+            line.setAttribute('d', 'M 0 120 Q 180 135 285 25');
+            fill.setAttribute('d', 'M 0 120 Q 180 135 285 25 L 285 120 L 0 120 Z');
+            box.style.left = '409px'; box.style.bottom = '125px'; box.style.transform = 'rotate(-35deg)';
+            box.style.filter = `drop-shadow(0 0 15px ${corDesejada}) brightness(1.3)`;
+            line.style.stroke = corDesejada; stop.style.stopColor = corDesejada;
+            setTimeout(() => { if(emSinal) fill.style.opacity = "1"; }, 1000);
+        } 
+        else if(estado === 'finish') {
+            if(corDesejada === 'var(--green)') {
+                line.style.stroke = 'var(--green)';
+                stop.style.stopColor = 'var(--green)';
+                box.style.filter = `drop-shadow(0 0 35px var(--green)) brightness(2)`;
+            }
+            setTimeout(() => {
+                box.classList.add('fly-away');
+                line.style.opacity = "0"; fill.style.opacity = "0"; 
+                setTimeout(resetPos, 700);
+            }, 500); 
+        }
+    }
+
+    function resetPos() {
+        const box = document.getElementById('rocket-box');
+        const line = document.getElementById('curva-line');
+        const fill = document.getElementById('curva-fill');
+        box.style.transition = "none"; line.style.transition = "none"; fill.style.transition = "none";
+        box.classList.remove('fly-away');
+        line.setAttribute('d', 'M 0 120 Q 0 120 0 120');
+        fill.setAttribute('d', 'M 0 120 L 0 120 L 0 120 Z');
+        fill.style.opacity = "0"; line.style.opacity = "1"; 
+        box.style.left = '10px'; box.style.bottom = '0px'; box.style.transform = 'rotate(0deg)';
+        box.style.filter = 'grayscale(1) brightness(1.2)';
+    }
+
+    function analisarEstrategia() {
+        // Precisa de pelo menos 3 velas para os padrões s3 e 4 para s4
+        if (velas.length < 3) return;
+
+        // h[0] é a Esquerda (Mais Recente), h[3] é a Direita (Mais Antiga)
+        let h = velas.map(v => v < 2 ? 'P' : 'G');
+
+        // Sequências lendo da Esquerda para Direita na Grade
+        let s3 = h[0] + h[1] + h[2]; 
+        let s4 = (velas.length >= 4) ? h[0] + h[1] + h[2] + h[3] : "";
+
+        let encontrou = false;
+        let padraoNome = "";
+
+        // ESTRATÉGIA EXCLUSIVA POR FIGURA (Esquerda p/ Direita)
+        if (s3 === "PPG") { encontrou = true; padraoNome = "PPG"; }
+        else if (s3 === "PGG") { encontrou = true; padraoNome = "PGG"; }
+        else if (s3 === "GGP") { encontrou = true; padraoNome = "GGP"; }
+        else if (s4 === "GPGG") { encontrou = true; padraoNome = "GPGG"; }
+        else if (s4 === "PGGG") { encontrou = true; padraoNome = "PGGG"; }
+        else if (s4 === "PPPG") { encontrou = true; padraoNome = "PPPG"; }
+
+        if (encontrou) {
+            emSinal = true;
+            alvo = 1.50; 
+            animar('voo');
+            setBalao("red", "🚀 PADRÃO: " + padraoNome + " | 1.50x");
+        } else {
+            setBalao("text", "ANALISANDO...");
+        }
+    }
+
+    function confirmar() {
+        let v = parseFloat(input); if(isNaN(v)) return;
+        velas.unshift(v); if(velas.length > 21) velas.pop();
+        
+        if(emSinal) {
+            if(v >= alvo) {
+                if(gale === 0) s.d++; else s.g++;
+                animar('finish', 'var(--green)'); emSinal = false; gale = 0;
+                setBalao("green", "✅ GREEN " + alvo.toFixed(2) + "x");
+            } else {
+                gale++;
+                if(gale > 2) { 
+                    s.r++; animar('finish', 'var(--red)'); emSinal = false; gale = 0; 
+                    setBalao("red", "❌ RED"); 
+                } else { 
+                    animar('voo', 'var(--orange)'); 
+                    setBalao("orange", "⚠️ GALE " + gale + ": " + alvo.toFixed(2) + "x"); 
+                }
+            }
+        } else {
+            analisarEstrategia();
+        }
+        render(); clr();
+    }
+
+    function setBalao(cor, txt) {
+        document.getElementById('status').style.color = `var(--${cor === 'text' ? 'orange' : cor})`;
+        document.getElementById('status').innerHTML = txt;
+    }
+
+    function render() {
+        document.getElementById('hist').innerHTML = velas.map(x => `<div class="vela-item" style="color:${x>=2?'#9b59b6':'#3498db'}">${x.toFixed(2)}</div>`).join('');
+        document.getElementById('sd').innerText = s.d; document.getElementById('sg').innerText = s.g;
+        document.getElementById('sr').innerText = s.r; document.getElementById('st').innerText = s.d+s.g;
+    }
+</script>
+</body>
+</html>
