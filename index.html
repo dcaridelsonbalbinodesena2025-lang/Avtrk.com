@@ -16,7 +16,7 @@
         .score-label { font-size: 10px; color: #848e9c; }
 
         .historico-container { 
-            height: 80px; padding: 5px; display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; 
+            height: 50px; padding: 5px; display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; 
             background: #080a0d; overflow-y: auto; align-content: start;
         }
         .vela-item { padding: 6px 0; display: flex; align-items: center; justify-content: center; border-radius: 4px; font-weight: bold; font-size: 16px; background: #1e2329; border: 1px solid rgba(255,255,255,0.1); }
@@ -142,7 +142,7 @@
             line.style.opacity = "1"; fill.style.opacity = "0";
             line.setAttribute('d', 'M 0 120 Q 180 135 285 25');
             fill.setAttribute('d', 'M 0 120 Q 180 135 285 25 L 285 120 L 0 120 Z');
-            box.style.left = '355px'; box.style.bottom = '125px'; box.style.transform = 'rotate(-35deg)';
+            box.style.left = '290px'; box.style.bottom = '125px'; box.style.transform = 'rotate(-35deg)';
             box.style.filter = `drop-shadow(0 0 15px ${corDesejada}) brightness(1.3)`;
             line.style.stroke = corDesejada; stop.style.stopColor = corDesejada;
             setTimeout(() => { if(emSinal) fill.style.opacity = "1"; }, 1000);
