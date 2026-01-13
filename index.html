@@ -48,7 +48,7 @@
         #rocket-box {
             position: absolute; width: 50px; height: 50px; left: 10px; bottom: 0px; z-index: 30;
             display: flex; align-items: center; justify-content: center;
-            font-size: 30px; transition: all 1.5s cubic-bezier(0.1, 0, 0.3, 1);
+            font-size: 40px; transition: all 1.5s cubic-bezier(0.1, 0, 0.3, 1);
         }
 
         .rocket-anim { animation: tremor 0.1s infinite alternate; }
@@ -66,7 +66,7 @@
         .btn-grid { display: grid; grid-template-columns: 3fr 1.2fr; gap: 8px; }
         .num-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
         .btn { background: #2b2f36; border: none; color: #fff; padding: 7px 0; font-size: 15px; font-weight: bold; border-radius: 8px; }
-        .btn-clear-all { background: #444; color: #fff; font-size: 7px; text-transform: uppercase; margin-bottom: 8px; height: 60px; line-height: 1.2; border: none; border-radius: 8px; }
+        .btn-clear-all { background: #444; color: #fff; font-size: 17px; text-transform: uppercase; margin-bottom: 8px; height: 60px; line-height: 1.2; border: none; border-radius: 8px; }
         .btn-ok { background: var(--green); color: #000; font-weight: 900; flex: 1; border: none; border-radius: 8px; font-size: 22px; }
     </style>
 </head>
@@ -142,7 +142,7 @@
             line.style.opacity = "1"; fill.style.opacity = "0";
             line.setAttribute('d', 'M 0 120 Q 180 135 285 25');
             fill.setAttribute('d', 'M 0 120 Q 180 135 285 25 L 285 120 L 0 120 Z');
-            box.style.left = '255px'; box.style.bottom = '225px'; box.style.transform = 'rotate(-35deg)';
+            box.style.left = '355px'; box.style.bottom = '125px'; box.style.transform = 'rotate(-35deg)';
             box.style.filter = `drop-shadow(0 0 15px ${corDesejada}) brightness(1.3)`;
             line.style.stroke = corDesejada; stop.style.stopColor = corDesejada;
             setTimeout(() => { if(emSinal) fill.style.opacity = "1"; }, 1000);
