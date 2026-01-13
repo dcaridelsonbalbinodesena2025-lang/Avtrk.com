@@ -12,11 +12,11 @@
         body { background: var(--bg); color: #fff; font-family: sans-serif; margin: 0; overflow: hidden; display: flex; flex-direction: column; height: 92vh; }
 
         .header { display: grid; grid-template-columns: repeat(4, 1fr); padding: 5px; background: var(--card); border-bottom: 1px solid #333; text-align: center; }
-        .score-num { font-size: 22px; font-weight: bold; display: block; }
+        .score-num { font-size: 15px; font-weight: bold; display: block; }
         .score-label { font-size: 10px; color: #848e9c; }
 
         .historico-container { 
-            height: 90px; padding: 5px; display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; 
+            height: 100px; padding: 5px; display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; 
             background: #080a0d; overflow-y: auto; align-content: start;
         }
         .vela-item { padding: 6px 0; display: flex; align-items: center; justify-content: center; border-radius: 4px; font-weight: bold; font-size: 16px; background: #1e2329; border: 1px solid rgba(255,255,255,0.1); }
@@ -28,8 +28,8 @@
         }
         
         .balao { 
-            width: 85%; padding: 5px; border-radius: 12px; text-align: center; 
-            font-weight: 900; font-size: 25px; text-transform: uppercase;
+            width: 85%; padding: 3px; border-radius: 12px; text-align: center; 
+            font-weight: 900; font-size: 15px; text-transform: uppercase;
             background: rgba(15, 15, 15, 0.9); border: 2px solid #333; margin-bottom: 10px; z-index: 25;
         }
 
@@ -48,7 +48,7 @@
         #rocket-box {
             position: absolute; width: 50px; height: 50px; left: 10px; bottom: 0px; z-index: 30;
             display: flex; align-items: center; justify-content: center;
-            font-size: 40px; transition: all 1.5s cubic-bezier(0.1, 0, 0.3, 1);
+            font-size: 35px; transition: all 1.5s cubic-bezier(0.1, 0, 0.3, 1);
         }
 
         .rocket-anim { animation: tremor 0.1s infinite alternate; }
