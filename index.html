@@ -31,8 +31,13 @@
         #svg-grafico { position: absolute; bottom: 0; left: 0; width: 100%; height: 100%; overflow: visible; }
         #curva-line { fill: none; stroke: var(--cor-vermelha); stroke-width: 5; stroke-linecap: round; transition: d 1.5s cubic-bezier(0.1, 0, 0.3, 1), stroke 0.3s, opacity 0.4s; opacity: 0; }
         #curva-fill { fill: url(#grad); opacity: 0; transition: d 1.5s cubic-bezier(0.1, 0, 0.3, 1), opacity 0.4s; }
-        #rocket-box { position: absolute; width: 45px; height: 45px; left: 10px; bottom: 0px; z-index: 30; display: flex; align-items: center; justify-content: center; font-size: 35px; transition: all 1.5s cubic-bezier(0.1, 0, 0.3, 1); filter: grayscale(1); }
         
+        /* FOGUETE COM TRANSIÇÃO */
+        #rocket-box { position: absolute; width: 45px; height: 45px; left: 10px; bottom: 0px; z-index: 30; display: flex; align-items: center; justify-content: center; font-size: 35px; transition: all 1.5s cubic-bezier(0.1, 0, 0.3, 1); filter: grayscale(1); opacity: 0; }
+        
+        /* CLASSE PARA RESETAR SEM VOLTAR DE RÉ */
+        .no-transition { transition: none !important; }
+
         .fly-away { transform: translate(500px, -500px) rotate(-20deg) scale(1.2) !important; opacity: 0 !important; transition: transform 0.7s cubic-bezier(0.4, 0, 1, 1), opacity 0.4s !important; }
 
         .grade { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 8px; }
@@ -169,7 +174,7 @@
             if(v >= 1.50) { 
                 totalGreenGeral++; sinalAtivo = false; animarRocket('finish', 'var(--cor-verde)');
                 setStatus("GREEN! ✅", "var(--cor-verde)");
-                setMsgAux("GREEN NO ALVO!", "var(--cor-verde)"); // BALÃO MUDA PARA VERDE
+                setMsgAux("GREEN NO ALVO!", "var(--cor-verde)");
                 logSinais.unshift({res: 'GREEN', val: v, gale: galeAtual, hora: hora});
             } else {
                 galeAtual++;
@@ -177,12 +182,12 @@
                 if (!seg.seguro || galeAtual > 1) {
                     totalRedGeral++; sinalAtivo = false; animarRocket('finish', 'var(--cor-vermelha)'); 
                     setStatus(galeAtual > 1 ? "RED ❌" : "ABORTADO! 🛑", "var(--cor-vermelha)");
-                    setMsgAux(galeAtual > 1 ? "RED: LIMITE GALE" : "RISCO: ABORTADO", "var(--cor-vermelha)"); // BALÃO MUDA PARA VERMELHO
+                    setMsgAux(galeAtual > 1 ? "RED: LIMITE GALE" : "RISCO: ABORTADO", "var(--cor-vermelha)");
                     logSinais.unshift({res: 'RED', val: v, gale: galeAtual-1, hora: hora});
                 } else { 
                     animarRocket('voo', 'var(--cor-alerta)');
                     setStatus(`🚨 GALE ${galeAtual}`, "var(--cor-alerta)"); 
-                    setMsgAux("FAZER GALE 1", "var(--cor-alerta)"); // BALÃO MUDA PARA LARANJA
+                    setMsgAux("FAZER GALE 1", "var(--cor-alerta)");
                 }
             }
         } else {
@@ -200,13 +205,13 @@
             if(seq.startsWith(item.p)) {
                 achou = true; sinalAtivo = true; galeAtual = 0;
                 setStatus("ENTRAR: 1.50x 🚀", "var(--cor-alerta)");
-                setMsgAux("SINAL CONFIRMADO", "var(--cor-alerta)"); // BALÃO MUDA PARA LARANJA
+                setMsgAux("SINAL CONFIRMADO", "var(--cor-alerta)");
                 animarRocket('voo');
             }
         });
         if(!achou) {
             setStatus("ANALISANDO...", "var(--cor-verde)");
-            setMsgAux("ANALISANDO MERCADO", "#0000ff"); // BALÃO VOLTA PARA AZUL
+            setMsgAux("ANALISANDO MERCADO", "#0000ff");
         }
     }
 
@@ -215,7 +220,6 @@
         s.innerText = txt; s.style.color = cor;
     }
 
-    // --- RESTANTE DO CÓDIGO (ANIMAÇÕES E ABAS) ---
     function analisarSegurancaGale() {
         if (historico.length < 3) return { seguro: true, msg: "OK" };
         const ultimas = historico.slice(0, 3);
@@ -229,8 +233,13 @@
         const line = document.getElementById('curva-line');
         const fill = document.getElementById('curva-fill');
         const stop = document.getElementById('stop-top');
+        
         if(estado === 'voo') {
-            box.classList.remove('fly-away'); line.style.opacity = "1"; fill.style.opacity = "0";
+            box.classList.remove('no-transition'); // GARANTE QUE VOLTE A ANIMAR
+            box.classList.remove('fly-away'); 
+            box.style.opacity = "1";
+            line.style.opacity = "1"; 
+            fill.style.opacity = "0";
             line.setAttribute('d', 'M 0 120 Q 150 130 280 40');
             fill.setAttribute('d', 'M 0 120 Q 150 130 280 40 L 280 120 L 0 120 Z');
             box.style.left = '269px'; box.style.bottom = '100px'; 
@@ -243,7 +252,9 @@
                 box.style.filter = `drop-shadow(0 0 35px var(--cor-verde)) brightness(2)`;
             }
             setTimeout(() => {
-                box.classList.add('fly-away'); line.style.opacity = "0"; fill.style.opacity = "0"; 
+                box.classList.add('fly-away'); 
+                line.style.opacity = "0"; 
+                fill.style.opacity = "0"; 
                 setTimeout(resetRocket, 700);
             }, 500); 
         }
@@ -252,21 +263,30 @@
     function resetRocket() {
         const box = document.getElementById('rocket-box');
         const line = document.getElementById('curva-line');
+        
+        // CORREÇÃO AQUI: ADICIONA NO-TRANSITION PARA VOLTAR SEM RE
+        box.classList.add('no-transition');
         box.classList.remove('fly-away');
+        box.style.opacity = "0"; 
+        
+        // VOLTA PARA O INÍCIO INSTANTANEAMENTE
+        box.style.left = '10px'; 
+        box.style.bottom = '0px'; 
+        box.style.transform = 'rotate(0deg)'; 
+        box.style.filter = 'grayscale(1)';
+        
         line.setAttribute('d', 'M 0 120 Q 0 120 0 120');
-        line.style.opacity = "0"; box.style.left = '10px'; box.style.bottom = '0px'; 
-        box.style.transform = 'rotate(0deg)'; box.style.filter = 'grayscale(1)';
+        line.style.opacity = "0";
     }
 
+    // --- MANTENDO O RESTANTE DO CÓDIGO IGUAL ---
     function carregarTudo() {
         const s = localStorage.getItem('aviator_p_v4');
         meusPadroes = s ? JSON.parse(s) : [{p: "PPG"}];
         renderGrade();
     }
-
     function add(n) { if(digitacao.length < 5) { digitacao += n; document.getElementById('visor-val').innerText = digitacao; } }
     function limpar() { digitacao = ""; document.getElementById('visor-val').innerText = "0.00"; }
-
     function renderGrade() {
         const g = document.getElementById('grade'); g.innerHTML = '';
         for(let i=0; i<14; i++) {
@@ -274,63 +294,41 @@
             else g.innerHTML += `<div class="vela"></div>`;
         }
     }
-
     function abrirVisor() {
         switchTab('grade-inf');
         const container = document.getElementById('grade-completa-infinita');
         container.innerHTML = historico.map(h => `<div class="vela ${h.c}">${h.v}</div>`).join('');
     }
-
     function abrirHistorico() {
         switchTab('hist');
         const container = document.getElementById('lista-greens-layout');
-        container.innerHTML = logSinais.map(l => `
-            <div class="log-item ${l.res === 'RED' ? 'log-red' : ''}">
-                <b>[${l.res}]</b> Vela: ${l.val}x | Gale: ${l.gale} | Hora: ${l.hora}
-            </div>
-        `).join('') || '<p style="text-align:center">Sem sinais registrados.</p>';
+        container.innerHTML = logSinais.map(l => `<div class="log-item ${l.res === 'RED' ? 'log-red' : ''}"><b>[${l.res}]</b> Vela: ${l.val}x | Gale: ${l.gale} | Hora: ${l.hora}</div>`).join('') || '<p style="text-align:center">Sem sinais registrados.</p>';
     }
-
     function abrirInfo() {
         switchTab('analise');
         const total = totalGreenGeral + totalRedGeral;
         const assert = total > 0 ? ((totalGreenGeral / total) * 100).toFixed(1) : 0;
         const ultimas10 = historico.slice(0, 10);
         const azuis = ultimas10.filter(h => parseFloat(h.v) < 2).length;
-        document.getElementById('sugestao-final').innerHTML = `
-            <b>ASSERTIVIDADE:</b> ${assert}% <br>
-            <b>GREENS:</b> ${totalGreenGeral} | <b>REDS:</b> ${totalRedGeral} <br><br>
-            <b>ÚLTIMAS 10 VELAS:</b><br>
-            Azuis (< 2x): ${azuis}<br>
-            Altas (> 2x): ${10 - azuis}<br><br>
-            <b>DICA:</b> ${azuis > 7 ? "Mercado RUIM" : "Mercado BOM"}
-        `;
+        document.getElementById('sugestao-final').innerHTML = `<b>ASSERTIVIDADE:</b> ${assert}% <br><b>GREENS:</b> ${totalGreenGeral} | <b>REDS:</b> ${totalRedGeral} <br><br><b>ÚLTIMAS 10 VELAS:</b><br>Azuis (< 2x): ${azuis}<br>Altas (> 2x): ${10 - azuis}<br><br><b>DICA:</b> ${azuis > 7 ? "Mercado RUIM" : "Mercado BOM"}`;
     }
-
-    function switchTab(t) { 
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        document.getElementById('tab-'+t).classList.add('active');
-    }
-
+    function switchTab(t) { document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); document.getElementById('tab-'+t).classList.add('active'); }
     function atualizarTendencia() {
         if(historico.length < 5) return;
         const greens = historico.slice(0, 10).filter(h => parseFloat(h.v) >= 2.0).length;
         document.getElementById('tend-forca').innerText = (greens * 10) + "%";
         document.getElementById('tend-txt').innerText = greens > 6 ? "ALTA" : (greens < 4 ? "BAIXA" : "ESTÁVEL");
     }
-
     function toggleCrono() {
         if(cronoInterval) { clearInterval(cronoInterval); cronoInterval = null; document.getElementById('btn-crono').innerText = "▶️"; }
         else { cronoInterval = setInterval(() => { tempoSeg++; atualizarCrono(); }, 1000); document.getElementById('btn-crono').innerText = "⏸️"; }
     }
-
     function atualizarCrono() {
         let h = Math.floor(tempoSeg / 3600).toString().padStart(2, '0');
         let m = Math.floor((tempoSeg % 3600) / 60).toString().padStart(2, '0');
         let s = (tempoSeg % 60).toString().padStart(2, '0');
         document.getElementById('display-crono').innerText = `${h}:${m}:${s}`;
     }
-
     function apagarDadosGerais() { if(confirm("Zerar placar e histórico?")) { historico = []; logSinais = []; totalGreenGeral = 0; totalRedGeral = 0; document.getElementById('count-g-geral').innerText = 0; document.getElementById('count-r-geral').innerText = 0; renderGrade(); } }
     function abrirConfig() { document.getElementById('modal-config').style.display = 'flex'; renderConfig(); }
     function fecharConfig() { document.getElementById('modal-config').style.display = 'none'; }
