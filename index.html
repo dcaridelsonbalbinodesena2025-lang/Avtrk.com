@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora Sniper Auto</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        /* Aqui fica o seu CSS (Cores, botões, grade) que já tínhamos */
+        body { background: #1a1a1a; color: white; font-family: sans-serif; text-align: center; }
+        .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; padding: 10px; }
+        .vela { padding: 10px; background: #333; border-radius: 5px; font-weight: bold; }
+        .win { background: #28a745; }
+        .loss { background: #dc3545; }
+    </style>
+</head>
+<body>
+
+    <h2>Calculadora Sniper - Automática</h2>
+    <div id="placar">WINS: 0 | LOSSES: 0</div>
+    <div class="grid" id="gridVelas">
+        </div>
+
+    <script>
+        let historico = [];
+
+        // FUNÇÃO QUE PROCESSA A VELA RECEBIDA
+        function receberVelaAutomatica(valor) {
+            const v = parseFloat(valor);
+            historico.unshift(v); // Adiciona no início
+            if(historico.length > 10) historico.pop(); // Mantém as últimas 10
+            atualizarInterface();
+        }
+
+        function atualizarInterface() {
+            const container = document.getElementById('gridVelas');
+            container.innerHTML = '';
+            historico.forEach(v => {
+                const div = document.createElement('div');
+                div.className = 'vela ' + (v >= 1.5 ? 'win' : 'loss');
+                div.innerText = v.toFixed(2) + 'x';
+                container.appendChild(div);
+            });
+        }
+
+        // --- AQUI É A CONEXÃO COM O RENDER ---
+        // Quando você tiver o link do Render, substitua 'SEU-APP' abaixo
+        const socket = io('https://seu-app-no-render.onrender.com');
+
+        socket.on('nova-vela', (valor) => {
+            console.log("Vela recebida do robô:", valor);
+            receberVelaAutomatica(valor);
+        });
+
+        socket.on('connect', () => console.log("Conectado ao Robô!"));
+    </script>
+</body>
+</html>
