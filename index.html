@@ -1,289 +1,44 @@
-<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aviator Pro - Sniper Edition</title>
-    <style>
-        :root {
-            --aviator-azul: #3498db; --aviator-roxo: #9b59b6; --aviator-rosa: #e91e63;
-            --cor-verde: #008000; --cor-vermelha: #d91d3a; --cor-alerta: #f39c12; --cor-lime:#00FF00;
-        }
+const puppeteer = require('puppeteer');
+const express = require('express');
+const app = express();
+const http = require('http').Server(app);
+const io = require('socket.io')(http, { cors: { origin: "*" } });
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Arial Black', sans-serif; }
-        body { background: #000; display: flex; flex-direction: column; align-items: center; height: 95vh; overflow: hidden; color: white; }
+const URL_ALVO = "https://www.tipminer.com/br/historico/estrelabet/aviator";
 
-        .topo-info { display: flex; width: 100%; height: 40px; background: #111; border-bottom: 2px solid #333; }
-        .placar-geral { width: 50%; display: flex; justify-content: center; align-items: center; gap: 15px; font-size: 1.1rem; border-right: 1px solid #333; }
-        .placar-g-geral { color: var(--cor-verde); } .placar-r-geral { color: var(--cor-vermelha); }
-        .cronometro-box { width: 50%; display: flex; justify-content: center; align-items: center; gap: 10px; font-size: 1.1rem; }
+async function iniciarVigia() {
+    const browser = await puppeteer.launch({
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || null
+    });
+    
+    const page = await browser.newPage();
+    console.log("Abrindo TipMiner...");
+    await page.goto(URL_ALVO, { waitUntil: 'networkidle2' });
 
-        .calculadora {
-            width: 95vw; max-width: 460px; height: 98vh; background: #1a1a1a;
-            border-radius: 20px; border: 2px solid #333; padding: 8px;
-            display: flex; flex-direction: column; position: relative;
-        }
+    let ultimaVela = "";
 
-        .stage-animacao {
-            width: 100%; height: 160px; background: radial-gradient(circle at bottom, #1a0a2e 0%, #000 100%);
-            border-radius: 12px; margin-bottom: 8px; position: relative; overflow: hidden; border: 1px solid #333;
-            display: flex; align-items: flex-end;
-        }
+    setInterval(async () => {
+        try {
+            const valorAtual = await page.evaluate(() => {
+                // Seleciona a primeira vela da grade de histórico
+                const vela = document.querySelector('.result-value') || document.querySelector('.multiplier');
+                return vela ? vela.innerText.replace('x', '').trim() : null;
+            });
 
-        /* LOGO K.C.M */
-        .watermark { position: absolute; bottom: 15px; right: 15px; text-align: center; z-index: 5; pointer-events: none; }
-        .logo-kcm { 
-            font-size: 1.5rem; display: flex; align-items: center; justify-content: center; gap: 2px;
-            color: #00aaff; text-shadow: 0 0 5px #fff, 0 0 10px #fff;
-            animation: pulse-glow 2s infinite alternate;
-        }
-        @keyframes pulse-glow {
-            from { text-shadow: 0 0 2px #fff, 0 0 8px #fff; transform: scale(1); }
-            to { text-shadow: 0 0 5px #fff, 0 0 15px #fff, 0 0 25px #fff; transform: scale(1.03); }
-        }
-        .foguete-logo { font-size: 1.2rem; margin: 0 -2px; }
-        .nome-user { font-size: 0.85rem; color: #fff; letter-spacing: 1px; display: block; margin-top: -2px; font-weight: normal; opacity: 0.9; }
-
-        /* GRADE DE VELAS - CORES ORIGINAIS COM CONTRASTE */
-        .grade { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 8px; min-height: 86px; }
-        .vela { background: #222; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; height: 24px; border: 0.5px solid #444; color: white; }
-        
-        .v-azul { background: #003247 !important; color: white !important; } 
-        .v-roxo { background: #6441a5 !important; color: white !important; } 
-        .v-rosa { background: #bf279b !important; color: white !important; }
-        
-        /* Caso use verde/vermelho/amarelo em algum momento */
-        .v-verde { background: var(--cor-verde) !important; color: white !important; }
-        .v-vermelha { background: var(--cor-vermelha) !important; color: white !important; }
-        .v-amarela { background: var(--cor-alerta) !important; color: black !important; }
-
-        .brilho-padrao { animation: pulse-border 0.8s infinite alternate; border: 2px solid #fff !important; box-shadow: 0 0 10px #fff; transform: scale(1.05); z-index: 10; }
-        @keyframes pulse-border { from { box-shadow: 0 0 5px #fff; } to { box-shadow: 0 0 15px #fff; } }
-
-        .painel-status { text-align: center; padding: 6px; background: #000; border-radius: 10px; border: 1px solid #333; margin-bottom: 8px; }
-        #status-display { color: var(--cor-verde); font-weight: bold; font-size: 1.1rem; text-transform: uppercase; }
-
-        .visor { background: #000; border: 1px solid #444; border-radius: 8px; height: 32px; display: flex; align-items: center; justify-content: center; color: var(--cor-verde); font-size: 1.2rem; }
-
-        .teclado-grid { display: grid; grid-template-columns: repeat(3, 1fr) 1.2fr; gap: 4px;}
-        .btn-n { background: #333; color: white; border: none; border-radius: 8px; font-size: 1.4rem; cursor: pointer; height: 45px; }
-        .btn-c { background: var(--cor-vermelha); color: white; border: none; border-radius: 8px; font-size: 1.4rem; cursor: pointer; }
-        .btn-acao { border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; color: white; font-size: 0.7rem; }
-        .btn-entrar { grid-row: span 2; background: var(--cor-verde); color: #000; font-size: 1rem; }
-
-        .tendencia-box { background: #000; padding: 5px 12px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; border-left: 4px solid var(--aviator-azul); align-items: center;}
-        
-        .tab-content { display: none; flex-direction: column; height: 100%; padding: 10px; overflow-y: auto; background: #1a1a1a; }
-        .tab-content.active { display: flex; }
-        
-        #svg-grafico { width: 100%; height: 85%; overflow: visible; }
-        #curva-line { fill: none; stroke-width: 5; stroke-linecap: round; opacity: 0; transition: d 1.5s cubic-bezier(0.1, 0, 0.3, 1), stroke 0.3s, opacity 0.4s; }
-        #curva-fill { fill: url(#grad); opacity: 0; transition: d 1.5s cubic-bezier(0.1, 0, 0.3, 1), opacity 0.4s; }
-        #rocket-box { position: absolute; width: 45px; height: 45px; left: 10px; bottom: 10px; z-index: 30; font-size: 35px; transition: all 1.5s cubic-bezier(0.1, 0, 0.3, 1); display: flex; align-items: center; justify-content: center; filter: grayscale(1); opacity: 0; }
-        .rocket-anim { animation: tremor 0.1s infinite alternate; }
-        @keyframes tremor { from { transform: translate(0,0); } to { transform: translate(1px, 1px); } }
-        .fly-away { transform: translate(500px, -500px) rotate(-35deg) scale(1.2) !important; opacity: 0 !important; transition: transform 0.7s cubic-bezier(0.4, 0, 1, 1), opacity 0.4s !important; }
-
-        #modal-config { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 3000; display: none; flex-direction: column; padding: 20px; }
-    </style>
-</head>
-<body onload="carregarTudo()">
-
-<div class="topo-info">
-    <div class="placar-geral">
-        <div class="placar-g-geral">G: <span id="count-g-geral">0</span></div>
-        <div class="placar-r-geral">R: <span id="count-r-geral">0</span></div>
-    </div>
-    <div class="cronometro-box">
-        <span onclick="toggleCrono()" id="btn-crono" style="cursor:pointer">▶️</span>
-        <span id="display-crono">00:00:00</span>
-    </div>
-</div>
-
-<div class="calculadora">
-    <div id="tab-calc" class="tab-content active" style="padding:0">
-        <div class="tendencia-box">
-            <div><small style="color:#888; font-size: 0.7rem;">TENDÊNCIA</small><br><span id="tend-txt" style="font-size: 0.9rem;">ESTÁVEL</span></div>
-            <div style="text-align: right;"><small style="color:#888; font-size: 0.7rem;">FORÇA G</small><br><span id="tend-forca" style="color:var(--cor-verde); font-size: 0.9rem;">0%</span></div>
-            <button onclick="abrirConfig()" style="background:none; border:none; color:white; font-size: 1rem;">⚙️</button>
-        </div>
-
-        <div class="stage-animacao">
-            <div class="watermark">
-                <div class="logo-kcm">K.C<span class="foguete-logo">🚀</span>M</div>
-                <span class="nome-user">Aridelson B.</span>
-            </div>
-            <svg id="svg-grafico" viewBox="0 0 300 120">
-                <defs>
-                    <linearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" id="stop-top" style="stop-color:var(--cor-vermelha);stop-opacity:0.6" />
-                        <stop offset="100%" style="stop-color:var(--cor-vermelha);stop-opacity:0" />
-                    </linearGradient>
-                </defs>
-                <path id="curva-fill" d="M 0 120 Q 0 120 0 120"></path>
-                <path id="curva-line" d="M 0 120 Q 0 120 0 120"></path>
-            </svg>
-            <div id="rocket-box">🚀</div>
-        </div>
-
-        <div class="painel-status"><span id="status-display">SISTEMA ATIVO</span></div>
-        <div class="grade" id="grade"></div>
-
-        <div style="display: flex; gap: 5px; margin-bottom: 8px;">
-            <div class="visor" id="visor-val" style="flex: 1;">0.00</div>
-            <div id="msg-analisador-azul" style="flex: 1.8; background: #0000ff; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; padding: 4px; text-align: center; color: white;">
-                AGUARDANDO DADOS...
-            </div>
-        </div>
-
-        <div class="teclado-grid">
-            <button class="btn-n" onclick="add('7')">7</button><button class="btn-n" onclick="add('8')">8</button><button class="btn-n" onclick="add('9')">9</button>
-            <button class="btn-acao" style="background:#444" onclick="abrirVisor()">VISOR</button>
-            <button class="btn-n" onclick="add('4')">4</button><button class="btn-n" onclick="add('5')">5</button><button class="btn-n" onclick="add('6')">6</button>
-            <button class="btn-acao" style="background:#ff0000" onclick="abrirInfo()">INFO</button>
-            <button class="btn-n" onclick="add('1')">1</button><button class="btn-n" onclick="add('2')">2</button><button class="btn-n" onclick="add('3')">3</button>
-            <button class="btn-acao btn-entrar" onclick="confirmar()">ENTRAR</button>
-            <button class="btn-c" onclick="limpar()">C</button><button class="btn-n" onclick="add('0')">0</button><button class="btn-n" onclick="add('.')">.</button>
-            <button class="btn-acao" style="background:#007bff; grid-column: span 3; height: 38px;" onclick="abrirHistorico()">VER HISTÓRICO</button>
-            <button class="btn-acao" style="background:#c0392b; height: 38px;" onclick="apagarDadosGerais()">DEL</button>
-        </div>
-    </div>
-
-    <div id="tab-grade-inf" class="tab-content"><button class="btn-n" style="margin-bottom:10px; width:100%" onclick="switchTab('calc')">VOLTAR</button><div id="grade-completa-infinita" style="display:grid; grid-template-columns:repeat(5,1fr); gap:5px;"></div></div>
-    <div id="tab-hist" class="tab-content"><button class="btn-n" style="margin-bottom:10px; width:100%" onclick="switchTab('calc')">VOLTAR</button><div id="lista-greens-layout"></div></div>
-    <div id="tab-analise" class="tab-content"><button class="btn-n" style="margin-bottom:10px; width:100%" onclick="switchTab('calc')">VOLTAR</button><div id="sugestao-final"></div></div>
-
-    <div id="modal-config">
-        <h3 style="text-align:center">Configurar Padrões</h3>
-        <div id="lista-config" style="flex:1; overflow-y:auto; margin: 15px 0;"></div>
-        <input type="text" id="novo-p-input" placeholder="Ex: PPG" style="padding:10px; margin-bottom:10px">
-        <button onclick="salvarNovoPadrao()" style="background:var(--cor-verde); padding:10px; border:none; margin-bottom:5px">ADICIONAR</button>
-        <button onclick="fecharConfig()" style="background:var(--cor-vermelha); padding:10px; border:none">FECHAR</button>
-    </div>
-</div>
-
-<script>
-    let historico = [], logSinais = [], digitacao = "", sinalAtivo = false, meusPadroes = [], totalGreenGeral = 0, totalRedGeral = 0;
-    let tempoSeg = 0, cronoInterval = null, galeAtual = 0, numVelasBrilhar = 0;
-
-    function animarRocket(estado, cor) {
-        const box = document.getElementById('rocket-box'), line = document.getElementById('curva-line'), fill = document.getElementById('curva-fill'), stopTop = document.getElementById('stop-top');
-        if(estado === 'voo') {
-            box.classList.remove('fly-away'); box.style.opacity = "1"; line.style.opacity = "1";
-            line.setAttribute('d', 'M 0 120 Q 180 135 285 25');
-            fill.setAttribute('d', 'M 0 120 Q 180 135 285 25 L 285 120 L 0 120 Z');
-            box.style.left = '302px'; box.style.bottom = '95px'; box.style.transform = 'rotate(-35deg)';
-            box.style.filter = `drop-shadow(0 0 15px ${cor}) brightness(1.3)`; box.classList.add('rocket-anim');
-            line.style.stroke = cor; stopTop.style.stopColor = cor;
-            setTimeout(() => { if(sinalAtivo) fill.style.opacity = "1"; }, 1000);
-        } else {
-            box.style.filter = `drop-shadow(0 0 30px ${cor}) brightness(2)`;
-            setTimeout(() => {
-                box.classList.add('fly-away'); line.style.opacity = "0"; fill.style.opacity = "0";
-                setTimeout(resetPos, 700);
-            }, 500);
-        }
-    }
-
-    function resetPos() {
-        const box = document.getElementById('rocket-box'), line = document.getElementById('curva-line'), fill = document.getElementById('curva-fill');
-        box.style.transition = "none"; line.style.transition = "none"; fill.style.transition = "none";
-        box.classList.remove('fly-away', 'rocket-anim'); box.style.opacity = "0";
-        line.setAttribute('d', 'M 0 120 Q 0 120 0 120'); fill.style.opacity = "0";
-        box.style.left = '10px'; box.style.bottom = '10px'; box.style.transform = 'rotate(0deg)';
-        setTimeout(() => { box.style.transition = "all 1.5s cubic-bezier(0.1, 0, 0.3, 1)"; line.style.transition = "d 1.5s cubic-bezier(0.1, 0, 0.3, 1), stroke 0.3s, opacity 0.4s"; fill.style.transition = "d 1.5s cubic-bezier(0.1, 0, 0.3, 1), opacity 0.4s"; }, 50);
-    }
-
-    function confirmar() {
-        if(!digitacao || digitacao === "0.00") return;
-        const v = parseFloat(digitacao);
-        const t = v >= 2.0 ? 'G' : 'P';
-        
-        // VOLTANDO A LÓGICA ORIGINAL DA GRADE
-        let cl = v < 2.0 ? 'v-azul' : (v < 10.0 ? 'v-roxo' : 'v-rosa');
-        
-        historico.unshift({v: v.toFixed(2), t: t, c: cl, h: new Date().toLocaleTimeString()});
-
-        if(sinalAtivo) {
-            if(v >= 1.50) { 
-                totalGreenGeral++; sinalAtivo = false; animarRocket('finish', 'var(--cor-verde)');
-                setStatus("GREEN! ✅", "var(--cor-verde)"); setMsgAux("GREEN NO ALVO!", "var(--cor-verde)", "white");
-                logSinais.unshift({res: 'GREEN', val: v, gale: galeAtual, h: new Date().toLocaleTimeString()});
-            } else {
-                galeAtual++;
-                if (galeAtual > 1) {
-                    totalRedGeral++; sinalAtivo = false; animarRocket('finish', 'var(--cor-vermelha)');
-                    setStatus("RED ❌", "var(--cor-vermelha)"); setMsgAux("LIMITE GALE", "var(--cor-vermelha)", "white");
-                    logSinais.unshift({res: 'RED', val: v, gale: 1, h: new Date().toLocaleTimeString()});
-                } else { 
-                    animarRocket('voo', 'var(--cor-alerta)');
-                    setStatus(`🚨 GALE ${galeAtual}`, "var(--cor-alerta)"); setMsgAux("FAZER GALE 1", "var(--cor-alerta)", "black");
-                }
+            if (valorAtual && valorAtual !== ultimaVela) {
+                ultimaVela = valorAtual;
+                console.log("Vela Detectada: " + valorAtual);
+                io.emit('nova-vela', valorAtual);
             }
-        } else { verificarPadroes(); }
-        document.getElementById('count-g-geral').innerText = totalGreenGeral;
-        document.getElementById('count-r-geral').innerText = totalRedGeral;
-        renderGrade(); atualizarTendencia(); limpar();
-    }
-
-    function setMsgAux(txt, bg, fontColor) { 
-        const box = document.getElementById('msg-analisador-azul'); 
-        box.innerText = txt; 
-        box.style.background = bg; 
-        box.style.color = fontColor; 
-    }
-
-    function renderGrade() {
-        const g = document.getElementById('grade'); g.innerHTML = '';
-        for(let i=0; i<21; i++) {
-            const vDiv = document.createElement('div'); vDiv.className = 'vela';
-            if(historico[i]) { 
-                vDiv.className += ' ' + historico[i].c; 
-                vDiv.innerText = historico[i].v; 
-                if(i < numVelasBrilhar) vDiv.classList.add('brilho-padrao'); 
-            }
-            g.appendChild(vDiv);
+        } catch (e) {
+            console.log("Erro ao capturar:");
         }
-    }
+    }, 4000); 
+}
 
-    function verificarPadroes() {
-        numVelasBrilhar = 0;
-        const seq = historico.map(h => h.t).join('');
-        const valorForca = parseInt(document.getElementById('tend-forca').innerText) || 0;
-        meusPadroes.forEach(item => {
-            if(seq.startsWith(item.p)) {
-                numVelasBrilhar = item.p.length;
-                if(valorForca >= 40) {
-                    sinalAtivo = true; galeAtual = 0;
-                    setStatus("ENTRAR: 1.50x 🚀", "var(--cor-alerta)"); 
-                    setMsgAux("SINAL CONFIRMADO", "var(--cor-lime)", "black");
-                    animarRocket('voo', 'var(--cor-alerta)');
-                } else { 
-                    setStatus("FORÇA BAIXA", "var(--cor-vermelha)"); 
-                    setMsgAux("FORÇA G < 40%", "var(--cor-vermelha)", "white"); 
-                }
-            }
-        });
-        if(!sinalAtivo && numVelasBrilhar === 0) { 
-            setStatus("ANALISANDO...", "var(--cor-verde)"); 
-            setMsgAux("ANALISANDO MERCADO", "#0000ff", "white"); 
-        }
-    }
-
-    function carregarTudo() { meusPadroes = JSON.parse(localStorage.getItem('aviator_p_v4')) || [{p: "PPG"}]; renderGrade(); }
-    function add(n) { if(digitacao.length < 5) { digitacao += n; document.getElementById('visor-val').innerText = digitacao; } }
-    function limpar() { digitacao = ""; document.getElementById('visor-val').innerText = "0.00"; }
-    function setStatus(txt, cor) { const s = document.getElementById('status-display'); s.innerText = txt; s.style.color = cor; }
-    function switchTab(t) { document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); document.getElementById('tab-'+t).classList.add('active'); }
-    function abrirVisor() { switchTab('grade-inf'); document.getElementById('grade-completa-infinita').innerHTML = historico.map(h => `<div class="vela ${h.c}">${h.v}</div>`).join(''); }
-    function abrirHistorico() { switchTab('hist'); document.getElementById('lista-greens-layout').innerHTML = logSinais.map(l => `<div class="card-hist"><b>${l.res}</b>: ${l.val}</div>`).join(''); }
-    function toggleCrono() { if(cronoInterval){clearInterval(cronoInterval);cronoInterval=null;}else{cronoInterval=setInterval(()=>{tempoSeg++;let h=Math.floor(tempoSeg/3600).toString().padStart(2,'0'),m=Math.floor((tempoSeg%3600)/60).toString().padStart(2,'0'),s=(tempoSeg%60).toString().padStart(2,'0');document.getElementById('display-crono').innerText=`${h}:${m}:${s}`;},1000);}}
-    function apagarDadosGerais() { if(confirm("Limpar tudo?")){historico=[];logSinais=[];totalGreenGeral=0;totalRedGeral=0;renderGrade();document.getElementById('count-g-geral').innerText=0;document.getElementById('count-r-geral').innerText=0;}}
-    function abrirConfig() { document.getElementById('modal-config').style.display='flex'; renderConfig(); }
-    function fecharConfig() { document.getElementById('modal-config').style.display='none'; }
-    function renderConfig() { document.getElementById('lista-config').innerHTML = meusPadroes.map((p,i)=>`<div style="display:flex; justify-content:space-between; padding:8px; background:#222; margin-bottom:2px;">${p.p} <button onclick="meusPadroes.splice(${i},1);renderConfig();localStorage.setItem('aviator_p_v4', JSON.stringify(meusPadroes))">X</button></div>`).join(''); }
-    function salvarNovoPadrao() { const val = document.getElementById('novo-p-input').value.toUpperCase().replace(/[^PG]/g, ''); if(val){meusPadroes.push({p:val}); renderConfig(); localStorage.setItem('aviator_p_v4', JSON.stringify(meusPadroes)); document.getElementById('novo-p-input').value='';}}
-    function atualizarTendencia() { const greens = historico.slice(0, 10).filter(h => parseFloat(h.v) >= 2.0).length; const f = greens * 10; const span = document.getElementById('tend-forca'); span.innerText = f + "%"; span.style.color = f >= 40 ? "var(--cor-verde)" : "var(--cor-vermelha)"; document.getElementById('tend-txt').innerText = f > 60 ? "ALTA" : (f < 30 ? "BAIXA" : "ESTÁVEL"); }
-</script>
-</body>
-</html>
+app.get('/', (req, res) => res.send("Robô Sniper Online!"));
+http.listen(process.env.PORT || 3000, () => {
+    console.log("Servidor iniciado!");
+    iniciarVigia();
+});
