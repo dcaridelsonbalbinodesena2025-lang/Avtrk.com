@@ -52,7 +52,7 @@
         <div class="config-row"><label>SLOT 1</label><select id="selAtivo1" class="sel-ativo"></select></div>
         <div class="config-row"><label>SLOT 2</label><select id="selAtivo2" class="sel-ativo"></select></div>
         <div class="config-row"><label>SLOT 3</label><select id="selAtivo3" class="sel-ativo"></select></div>
-        <button onclick="salvarConfig()" style="width: 100%; padding: 15px; background: var(--tg-blue); color: white; border: none; border-radius: 6px; font-weight: bold;">CONECTAR MERCADO REAL</button>
+        <button onclick="salvarConfig()" style="width: 100%; padding: 15px; background: var(--tg-blue); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">CONECTAR MERCADO REAL</button>
     </div>
 
     <div class="tg-footer">
@@ -125,13 +125,17 @@
         banca = parseFloat(document.getElementById('inpBanca').value);
         document.getElementById('banca-header').innerText = `R$ ${banca.toFixed(2)}`;
         document.getElementById('panel-config').style.display = 'none';
-        conectarTudo();
+        conectarMercado();
     }
 
-    function conectarTudo() {
+    function conectarMercado() {
         sockets.forEach(s => s.close());
         sockets = []; dadosMercado = {};
-        const slots = [document.getElementById('selAtivo1').value, document.getElementById('selAtivo2').value, document.getElementById('selAtivo3').value];
+        const slots = [
+            document.getElementById('selAtivo1').value, 
+            document.getElementById('selAtivo2').value, 
+            document.getElementById('selAtivo3').value
+        ];
 
         slots.forEach(id => {
             if (id === "NONE") return;
@@ -139,72 +143,58 @@
             ws.onopen = () => ws.send(JSON.stringify({ ticks: id }));
             ws.onmessage = (m) => {
                 const d = JSON.parse(m.data);
-                if (d.tick) monitorar(id, d.tick.quote);
+                if (d.tick) motorAnalise(id, d.tick.quote);
             };
             sockets.push(ws);
         });
-        document.getElementById('status-global').innerText = "conectado";
-    function monitorar(id, preco) {
-        if (!dadosMercado[id]) {
-            dadosMercado[id] = { atual: preco, abertura: preco, ultimaMsg: 0 };
-            const nomeAt = LISTA_ATIVOS.find(a => a.id === id).nome;
-            addMsg(`📡 <b>VARREDURA ATIVA:</b> ${nomeAt}`);
-        }
-        
+        document.getElementById('status-global').innerText = "VIGILÂNCIA ATIVA";
+        addMsg("<b>SISTEMA LIGADO</b><br>Monitorando 3 ativos em tempo real.");
+    }
+
+    function motorAnalise(id, preco) {
+        if (!dadosMercado[id]) dadosMercado[id] = { atual: preco, abertura: preco, ultimaMsg: 0 };
         dadosMercado[id].atual = preco;
         const agora = Date.now();
         const seg = new Date().getSeconds();
 
-        // Reseta o preço de referência no início de cada minuto (Vela de M1)
-        if (seg === 0) {
-            dadosMercado[id].abertura = preco;
-        }
+        if (seg === 0) dadosMercado[id].abertura = preco;
 
-        // Se não estivermos em operação e já tivermos um preço de abertura
+        // GATILHO TEMPO REAL (Se a variação bater o nível, o sinal chega NA HORA como no grupo)
         if (!operando && dadosMercado[id].abertura > 0) {
             let diff = ((preco - dadosMercado[id].abertura) / dadosMercado[id].abertura) * 100;
-            let variacaoAbsoluta = Math.abs(diff);
+            let variacaoAbs = Math.abs(diff);
 
-            // GATILHO IGUAL AO DO GRUPO: 
-            // Se a força do preço atingir o nível da estratégia em QUALQUER segundo
-            // E se já passou pelo menos 30 segundos desde o último alerta deste ativo
-            if (variacaoAbsoluta > 0.012 && (agora - dadosMercado[id].ultimaMsg > 30000)) {
+            if (variacaoAbs > 0.012 && (agora - dadosMercado[id].ultimaMsg > 40000)) {
                 dadosMercado[id].ultimaMsg = agora;
-                const nome = LISTA_ATIVOS.find(a => a.id === id).nome;
-                
-                // Formata a direção conforme a Regra 1 (Força de Explosão)
-                let direcao = diff > 0 ? "VENDA" : "CALL"; 
-                iniciarSinal(id, nome, direcao);
+                const nomeAtivo = LISTA_ATIVOS.find(a => a.id === id).nome;
+                iniciarSinal(id, nomeAtivo, diff > 0 ? "VENDA" : "CALL");
             }
         }
     }
 
-
     function iniciarSinal(id, nome, dir, gale = 0) {
         operando = true;
         const est = document.getElementById('selEstrat').value;
-        const entradaPreço = dadosMercado[id].atual;
+        const entryPrice = dadosMercado[id].atual;
         
-        // MENSAGEM 1: ALERTA
         if (gale === 0) {
-            const hPrev = new Date(Date.now() + 4000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'00'});
+            const hPrev = new Date(Date.now() + 2000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'00'});
             addMsg(`🔍 <b>ALERTA DE SINAL</b><br><br>📊 Ativo: ${nome}<br>⚡ Estratégia: ${est}<br>🎯 Direção: ${dir}<br>⏰ Entrada prevista: ${hPrev}`);
         }
 
         setTimeout(() => {
-            const hInicio = new Date().toLocaleTimeString();
+            const hIn = new Date().toLocaleTimeString();
             const hFim = new Date(Date.now() + 60000).toLocaleTimeString();
+            const titulo = gale > 0 ? `🔄 <b>ENTRADA GALE ${gale}</b>` : `🚀 <b>ENTRADA CONFIRMADA</b>`;
             
-            // MENSAGEM 2: CONFIRMAÇÃO
-            const titulo = gale > 0 ? `🔄 <b>ENTRADA NO GALE ${gale}</b>` : `🚀 <b>ENTRADA CONFIRMADA</b>`;
-            addMsg(`${titulo}<br><br>📊 Ativo: ${nome}<br>⚡ Estratégia: ${est}<br>🎯 Direção: ${dir === 'CALL' ? 'COMPRA 🟢' : 'VENDA 🔴'}<br>🕒 Início: ${hInicio}<br>🏁 Fim: ${hFim}<br>📈 Placar: 🟢 ${wins}W | 🔴 ${loss}L`);
+            addMsg(`${titulo}<br><br>📊 Ativo: ${nome}<br>⚡ Estratégia: ${est}<br>🎯 Direção: ${dir === 'CALL' ? 'COMPRA 🟢' : 'VENDA 🔴'}<br>🕒 Início: ${hIn}<br>🏁 Fim: ${hFim}<br>📈 Placar: 🟢 ${wins}W | 🔴 ${loss}L`);
 
             setTimeout(() => {
-                const finalPreço = dadosMercado[id].atual;
-                const venceu = (dir === "CALL" ? finalPreço > entradaPreço : finalPreço < entradaPreço);
+                const exitPrice = dadosMercado[id].atual;
+                const win = (dir === "CALL" ? exitPrice > entryPrice : exitPrice < entryPrice);
                 
-                if (venceu) {
-                    wins++; banca += (10 * 0.95);
+                if (win) {
+                    wins++; banca += 9.5;
                     addMsg(`✅ <b>RESULTADO: GREEN</b><br><br>🚦 Status: ${gale > 0 ? 'GALE '+gale : 'DIRETO'}<br>📊 Ativo: ${nome}<br>⚡ Estratégia: ${est}<br>📈 Placar: 🟢 ${wins}W | 🔴 ${loss}L`);
                     operando = false;
                 } else if (gale < 2) {
@@ -214,14 +204,10 @@
                     addMsg(`❌ <b>RESULTADO: RED</b><br><br>🚦 Status: LOSS GALE 2<br>📊 Ativo: ${nome}<br>⚡ Estratégia: ${est}<br>📈 Placar: 🟢 ${wins}W | 🔴 ${loss}L`);
                     operando = false;
                 }
-                atualizarPlacar();
-            }, 60000);
-        }, gale === 0 ? 4000 : 0);
-    }
-
-    function atualizarPlacar() {
-        document.getElementById('placar-header').innerText = `🟢 ${wins} | 🔴 ${loss}`;
-        document.getElementById('banca-header').innerText = `R$ ${banca.toFixed(2)}`;
+                document.getElementById('placar-header').innerText = `🟢 ${wins} | 🔴 ${loss}`;
+                document.getElementById('banca-header').innerText = `R$ ${banca.toFixed(2)}`;
+            }, 60000); // 1 minuto real de operação
+        }, gale === 0 ? 2000 : 0);
     }
 
     window.onload = popularAtivos;
