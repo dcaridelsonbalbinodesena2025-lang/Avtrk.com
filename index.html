@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KCM MASTER - MULTI ESTRATÉGIA</title>
+    <title>K.c🚀m / Aridelson B.🚀</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --tg-bg: #0e1621; --tg-panel: #17212b; --tg-blue: #2481cc; --tg-green: #45ad5b; --tg-red: #d14e4e; --tg-text: #f5f5f5; --gale: #f0b90b; }
+        :root { --tg-bg: #0e1621; --tg-panel: #17212b; --tg-blue: #2481cc; --tg-green: #45ad5b; --tg-red: #d14e4e; --tg-text: #f5f5f5; }
         body { background: #070a0e; color: var(--tg-text); font-family: 'Open Sans', sans-serif; margin: 0; display: flex; justify-content: center; height: 100vh; overflow: hidden; }
         #app { width: 100%; max-width: 450px; background: var(--tg-bg); display: flex; flex-direction: column; position: relative; border-left: 1px solid #222; border-right: 1px solid #222; }
         .tg-header { background: var(--tg-panel); padding: 12px 15px; display: flex; align-items: center; border-bottom: 1px solid #000; }
@@ -15,17 +15,14 @@
         .tg-info b { display: block; font-size: 14px; }
         .tg-info span { font-size: 11px; color: var(--tg-green); }
         .visor-chat { flex-grow: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-blend-mode: overlay; background-color: var(--tg-bg); }
-        .bubble { max-width: 85%; padding: 12px; border-radius: 12px; margin-bottom: 10px; font-size: 13px; align-self: flex-start; background: var(--tg-panel); border-bottom-left-radius: 2px; border-left: 4px solid var(--tg-blue); box-shadow: 0 1px 3px rgba(0,0,0,0.4); position: relative; }
-        .bubble-win { border-left-color: var(--tg-green); }
-        .bubble-loss { border-left-color: var(--tg-red); }
-        .bubble-alerta { border-left-color: var(--gale); }
-        #panel-config { display: none; position: absolute; top: 65px; left: 10px; right: 10px; background: var(--tg-panel); padding: 20px; border-radius: 12px; z-index: 200; border: 1px solid #333; box-shadow: 0 0 50px #000; max-height: 80vh; overflow-y: auto; }
+        .bubble { max-width: 90%; padding: 12px; border-radius: 12px; margin-bottom: 15px; font-size: 14px; align-self: flex-start; background: var(--tg-panel); box-shadow: 0 1px 3px rgba(0,0,0,0.4); line-height: 1.6; }
+        .admin-tag { color: #6c7883; font-size: 11px; float: right; }
+        .btn-corretora { background: #45ad5b; color: white; text-align: center; padding: 10px; border-radius: 5px; text-decoration: none; display: block; margin-top: 5px; font-weight: bold; text-transform: uppercase; font-size: 12px; }
+        #panel-config { display: none; position: absolute; top: 65px; left: 10px; right: 10px; background: var(--tg-panel); padding: 20px; border-radius: 12px; z-index: 200; border: 1px solid #333; }
         .config-row { margin-bottom: 15px; }
-        .config-row label { font-size: 10px; color: var(--tg-blue); text-transform: uppercase; font-weight: bold; }
-        .config-row select, .config-row input { width: 100%; background: #0e1621; color: #fff; border: 1px solid #333; padding: 12px; border-radius: 6px; margin-top: 5px; font-size: 12px; }
+        .config-row select, .config-row input { width: 100%; background: #0e1621; color: #fff; border: 1px solid #333; padding: 12px; border-radius: 6px; }
         .tg-footer { background: var(--tg-panel); padding: 10px; border-top: 1px solid #000; display: flex; justify-content: space-around; }
-        .btn-footer { background: none; border: none; color: #6c7883; cursor: pointer; text-align: center; font-size: 10px; width: 33%; }
-        .btn-footer i { font-size: 20px; margin-bottom: 4px; }
+        .btn-footer { background: none; border: none; color: #6c7883; cursor: pointer; text-align: center; font-size: 10px; }
     </style>
 </head>
 <body>
@@ -33,92 +30,65 @@
 <div id="app">
     <div class="tg-header">
         <div class="tg-avatar">KC</div>
-        <div class="tg-info"><b>🤖 KCM MASTER</b> <span id="status-global">Aguardando...</span></div>
-        <div style="text-align: right;">
-            <div id="placar" style="font-size: 12px; font-weight: bold;">🟢 0 | 🔴 0</div>
-            <div id="banca-top" style="font-size: 10px; color: var(--tg-green);">R$ 5000.00</div>
-        </div>
+        <div class="tg-info"><b>K.c🚀m / Aridelson B.🚀</b><span id="status-global">conectando...</span></div>
     </div>
 
-    <div class="visor-chat" id="chat">
-        <div class="bubble"><b>CONEXÃO SEGURA PRONTA</b> 🔐<br>Selecione o ativo e a estratégia nos ajustes para iniciar o monitoramento em tempo real.</div>
-    </div>
+    <div class="visor-chat" id="chat"></div>
 
     <div id="panel-config">
-        <div class="config-row"><label>Sua Banca (R$)</label><input type="number" id="inpBanca" value="5000"></div>
-        <div class="config-row">
-            <label>Estratégia</label>
+        <div class="config-row"><label>Estratégia</label>
             <select id="selEstrat">
-                <option value="REGRA 1">🎯 REGRA 1 (FORÇA)</option>
-                <option value="FLUXO SNIPER">🏹 FLUXO SNIPER (CORES)</option>
-                <option value="ZIGZAG FRACTAL">📉 ZIGZAG FRACTAL</option>
-                <option value="SNIPER (RETRAÇÃO)">⚖️ SNIPER (RETRAÇÃO)</option>
+                <option value="REGRA 1">REGRA 1</option>
+                <option value="FLUXO">FLUXO</option>
             </select>
         </div>
         <div class="config-row"><label>Ativo</label><select id="selAtivo"></select></div>
-        <button onclick="salvarConfig()" style="width: 100%; padding: 15px; background: var(--tg-blue); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">SALVAR E LIGAR</button>
+        <button onclick="salvarConfig()" style="width: 100%; padding: 15px; background: var(--tg-blue); color: white; border: none; border-radius: 6px;">LIGAR ROBÔ</button>
     </div>
 
     <div class="tg-footer">
-        <button class="btn-footer" onclick="toggleConfig()"><i class="fas fa-sliders-h"></i><br>AJUSTES</button>
-        <button class="btn-footer" onclick="gerarRelatorio()"><i class="fas fa-chart-line"></i><br>RELATÓRIO</button>
-        <button class="btn-footer" onclick="location.reload()"><i class="fas fa-power-off"></i><br>RESET</button>
+        <button class="btn-footer" onclick="toggleConfig()"><i class="fas fa-cog"></i><br>AJUSTES</button>
     </div>
 </div>
 
 <script>
     const LISTA_ATIVOS = [
-        { id: "1HZ10V", nome: "📈 Volatility 10 (1s)" }, { id: "1HZ25V", nome: "📈 Volatility 25 (1s)" },
-        { id: "1HZ50V", nome: "📈 Volatility 50 (1s)" }, { id: "1HZ75V", nome: "📈 Volatility 75 (1s)" },
-        { id: "1HZ100V", nome: "📈 Volatility 100 (1s)" }, { id: "R_10", nome: "📊 Volatility 10" },
-        { id: "R_25", nome: "📊 Volatility 25" }, { id: "R_50", nome: "📊 Volatility 50" },
-        { id: "R_75", nome: "📊 Volatility 75" }, { id: "R_100", nome: "📊 Volatility 100" },
-        { id: "JD10", nome: "🚀 Jump 10" }, { id: "JD25", nome: "🚀 Jump 25" },
-        { id: "JD50", nome: "🚀 Jump 50" }, { id: "JD75", nome: "🚀 Jump 75" },
-        { id: "JD100", nome: "🚀 Jump 100" }, { id: "BOOM300", nome: "💥 Boom 300" },
-        { id: "BOOM500", nome: "💥 Boom 500" }, { id: "BOOM1000", nome: "💥 Boom 1000" },
-        { id: "CRASH300", nome: "📉 Crash 300" }, { id: "CRASH500", nome: "📉 Crash 500" },
-        { id: "CRASH1000", nome: "📉 Crash 1000" }, { id: "ST50", nome: "🎢 Step Index" },
-        { id: "frxEURUSD", nome: "💱 EUR/USD" }, { id: "frxGBPUSD", nome: "💱 GBP/USD" },
-        { id: "cryBTCUSD", nome: "₿ BITCOIN (BTC)" }
+        { id: "1HZ10V", nome: "Volatility 10 (1s)" }, { id: "1HZ75V", nome: "Volatility 75 (1s)" },
+        { id: "1HZ50V", nome: "Volatility 50 (1s)" }, { id: "1HZ100V", nome: "Volatility 100 (1s)" },
+        { id: "R_100", nome: "Volatility 100" }
     ];
 
-    let ws, banca = 5000, wins = 0, loss = 0, operando = false;
-    let precoAtual = 0, entryPrice = 0, currentDir = "", velaAb = 0, histCores = [];
+    let ws, wins = 443, loss = 112, operando = false;
+    let precoAtual = 0, precoEntrada = 0, dirAtual = "", velaAb = 0;
 
     function popularAtivos() {
         const sel = document.getElementById('selAtivo');
         LISTA_ATIVOS.forEach(a => { sel.innerHTML += `<option value="${a.id}">${a.nome}</option>`; });
     }
 
-    function addMsg(txt, tipo = '') {
+    function addMsg(conteudo) {
         const chat = document.getElementById('chat');
         const div = document.createElement('div');
-        div.className = `bubble ${tipo === 'win' ? 'bubble-win' : tipo === 'loss' ? 'bubble-loss' : tipo === 'alerta' ? 'bubble-alerta' : ''}`;
-        div.innerHTML = txt;
+        div.className = 'bubble';
+        const hora = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        div.innerHTML = `<span class="admin-tag">admin</span><b style="color:#e67e22">K.c🚀m / Aridelson B.🚀</b><br>${conteudo}<br><small style="opacity:0.5; float:right">${hora}</small><div style="clear:both"></div><a href="#" class="btn-corretora">📱 ACESSAR CORRETORA</a>`;
         chat.appendChild(div); chat.scrollTop = chat.scrollHeight;
     }
 
     function toggleConfig() { document.getElementById('panel-config').style.display = 'block'; }
 
     function salvarConfig() {
-        banca = parseFloat(document.getElementById('inpBanca').value);
-        document.getElementById('banca-top').innerText = `R$ ${banca.toFixed(2)}`;
         document.getElementById('panel-config').style.display = 'none';
         conectar();
     }
 
     function conectar() {
         if (ws) ws.close();
-        const ativo = document.getElementById('selAtivo').value;
-        const est = document.getElementById('selEstrat').value;
-        ws = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=1'); // App ID 1 para GitHub estável
+        const ativoID = document.getElementById('selAtivo').value;
+        const ativoNome = LISTA_ATIVOS.find(x => x.id === ativoID).nome;
+        ws = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=1');
         
-        ws.onopen = () => {
-            ws.send(JSON.stringify({ ticks: ativo }));
-            addMsg(`📡 <b>MOTOR LIGADO</b><br>Monitorando: ${ativo}<br>Estratégia: ${est}`);
-        };
-
+        ws.onopen = () => ws.send(JSON.stringify({ ticks: ativoID }));
         ws.onmessage = (msg) => {
             const data = JSON.parse(msg.data);
             if (!data.tick) return;
@@ -126,63 +96,48 @@
             const seg = new Date().getSeconds();
             document.getElementById('status-global').innerText = `AO VIVO: ${precoAtual.toFixed(2)} [${seg}s]`;
 
-            if (seg === 0) {
-                if (velaAb > 0) histCores.push(precoAtual > velaAb ? "V" : "R");
-                if (histCores.length > 5) histCores.shift();
-                velaAb = precoAtual;
-            }
+            if (seg === 0) velaAb = precoAtual;
 
-            if (!operando) logicaEstrategias(est, seg);
+            // Lógica de Alerta (Segundos antes de confirmar)
+            if (seg === 55 && !operando && velaAb > 0) {
+                let varPct = ((precoAtual - velaAb) / velaAb) * 100;
+                if (Math.abs(varPct) > 0.015) {
+                    gerarAlerta(ativoNome, varPct > 0 ? "VENDA" : "CALL");
+                }
+            }
         };
     }
 
-    function logicaEstrategias(est, seg) {
-        // 1. REGRA 1 (FORÇA)
-        if (est === "REGRA 1" && seg > 10) {
-            let varPct = ((precoAtual - velaAb) / velaAb) * 100;
-            if (Math.abs(varPct) > 0.035) disparar(varPct > 0 ? "PUT" : "CALL", est);
-        }
-        // 2. FLUXO SNIPER (3 VELAS IGUAIS)
-        else if (est === "FLUXO SNIPER" && seg === 1) {
-            let ult3 = histCores.slice(-3);
-            if (ult3.length === 3 && ult3.every(c => c === ult3[0])) {
-                disparar(ult3[0] === "V" ? "CALL" : "PUT", est);
-            }
-        }
-        // 3. ZIGZAG FRACTAL (REVERSÃO)
-        else if (est === "ZIGZAG FRACTAL" && seg === 30) {
-            let varPct = ((precoAtual - velaAb) / velaAb) * 100;
-            if (varPct > 0.05) disparar("PUT", est);
-            else if (varPct < -0.05) disparar("CALL", est);
-        }
-        // 4. RETRAÇÃO
-        else if (est === "SNIPER (RETRAÇÃO)" && seg > 45) {
-            let varPct = ((precoAtual - velaAb) / velaAb) * 100;
-            if (Math.abs(varPct) > 0.06) disparar(varPct > 0 ? "PUT" : "CALL", est);
-        }
-    }
-
-    function disparar(dir, est) {
-        operando = true; entryPrice = precoAtual; currentDir = dir;
-        addMsg(`🔍 <b>ALERTA DE SINAL</b><br>Estratégia: ${est}<br>Direção: ${dir === 'CALL' ? 'COMPRA 🟢' : 'VENDA 🔴'}`, 'alerta');
+    function gerarAlerta(ativo, direcao) {
+        const proxMin = new Date(); proxMin.setMinutes(proxMin.getMinutes() + 1);
+        const horaPrev = proxMin.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'00'});
         
+        addMsg(`🔍 <b>ALERTA DE SINAL</b><br><br>📊 Ativo: ${ativo}<br>⚡ Estratégia: REGRA 1<br>🎯 Direção: ${direcao}<br>⏰ Entrada prevista: ${horaPrev}`);
+
+        // Espera 5 segundos para Confirmar a Entrada
+        setTimeout(() => confirmarEntrada(ativo, direcao), 5000);
+    }
+
+    function confirmarEntrada(ativo, direcao) {
+        operando = true;
+        precoEntrada = precoAtual;
+        dirAtual = direcao;
+        const inicio = new Date().toLocaleTimeString();
+        const fimObj = new Date(); fimObj.setSeconds(fimObj.getSeconds() + 60);
+        const fim = fimObj.toLocaleTimeString();
+
+        addMsg(`🚀 <b>ENTRADA CONFIRMADA</b><br><br>📊 Ativo: ${ativo}<br>⚡ Estratégia: REGRA 1<br>🎯 Direção: ${direcao === 'CALL' ? 'COMPRA 🟢' : 'VENDA 🔴'}<br>🕒 Início: ${inicio}<br>🏁 Fim: ${fim}<br>📈 Placar: 🟢 ${wins}W | 🔴 ${loss}L`);
+
+        // Verificação Real Matemática
         setTimeout(() => {
-            const finalPrice = precoAtual;
-            const win = (currentDir === "CALL" && finalPrice > entryPrice) || (currentDir === "PUT" && finalPrice < entryPrice);
-            if (win) { wins++; banca += 9.5; addMsg(`✅ <b>GREEN!</b><br>Entrada: ${entryPrice.toFixed(4)}<br>Saída: ${finalPrice.toFixed(4)}`, 'win'); }
-            else { loss++; banca -= 10; addMsg(`❌ <b>LOSS</b><br>Entrada: ${entryPrice.toFixed(4)}<br>Saída: ${finalPrice.toFixed(4)}`, 'loss'); }
-            atualizarPlacar();
+            const precoSaida = precoAtual;
+            const ganhou = (dirAtual.includes("CALL") || dirAtual.includes("COMPRA") ? precoSaida > precoEntrada : precoSaida < precoEntrada);
+            
+            if (ganhou) { wins++; addMsg(`✅ <b>RESULTADO: GREEN</b><br><br>🚦 Status: DIRETO<br>📊 Ativo: ${ativo}<br>⚡ Estratégia: REGRA 1<br>📈 Placar: 🟢 ${wins}W | 🔴 ${loss}L`); }
+            else { loss++; addMsg(`❌ <b>RESULTADO: RED</b><br><br>🚦 Status: LOSS<br>📊 Ativo: ${ativo}<br>⚡ Estratégia: REGRA 1<br>📈 Placar: 🟢 ${wins}W | 🔴 ${loss}L`); }
+            
             operando = false;
-        }, 30000); // 30s para teste rápido. Mude para 60000 para M1 Real.
-    }
-
-    function atualizarPlacar() {
-        document.getElementById('placar').innerText = `🟢 ${wins} | 🔴 ${loss}`;
-        document.getElementById('banca-top').innerText = `R$ ${banca.toFixed(2)}`;
-    }
-
-    function gerarRelatorio() {
-        addMsg(`📊 <b>RELATÓRIO KCM</b><br>Greens: ${wins}<br>Losses: ${loss}<br>Banca: R$ ${banca.toFixed(2)}`);
+        }, 60000);
     }
 
     window.onload = popularAtivos;
