@@ -42,11 +42,10 @@
 
     <div id="panel-config">
         <div class="config-row"><label>BANCA INICIAL (R$)</label><input type="number" id="inpBanca" value="5000"></div>
-        <div class="config-row"><label>ESTRATÉGIA</label><select id="selEstrat"><option value="REGRA 1">REGRA 1</option><option value="FLUXO">FLUXO</option></select></div>
         <div class="config-row"><label>SLOT 1</label><select id="selAtivo1" class="sel-ativo"></select></div>
         <div class="config-row"><label>SLOT 2</label><select id="selAtivo2" class="sel-ativo"></select></div>
         <div class="config-row"><label>SLOT 3</label><select id="selAtivo3" class="sel-ativo"></select></div>
-        <button onclick="salvarConfig()" style="width: 100%; padding: 15px; background: var(--tg-blue); color: white; border: none; border-radius: 6px; font-weight: bold;">LIGAR MONITORAMENTO REAL</button>
+        <button onclick="iniciarSistema()" style="width: 100%; padding: 15px; background: var(--tg-blue); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">SALVAR E CONECTAR</button>
     </div>
 
     <div class="tg-footer">
@@ -56,151 +55,108 @@
 </div>
 
 <script>
-    const LISTA_ATIVOS = [
-        { id: "NONE", nome: "❌ DESATIVAR SLOT" },
-        { id: "1HZ10V", nome: "📈 Volatility 10 (1s)" },
-        { id: "1HZ25V", nome: "📈 Volatility 25 (1s)" },
-        { id: "1HZ50V", nome: "📈 Volatility 50 (1s)" },
-        { id: "1HZ75V", nome: "📈 Volatility 75 (1s)" },
-        { id: "1HZ100V", nome: "📈 Volatility 100 (1s)" },
-        { id: "R_10", nome: "📊 Volatility 10" },
-        { id: "R_25", nome: "📊 Volatility 25" },
-        { id: "R_50", nome: "📊 Volatility 50" },
-        { id: "R_75", nome: "📊 Volatility 75" },
-        { id: "R_100", nome: "📊 Volatility 100" },
-        { id: "JD10", nome: "🚀 Jump 10" },
-        { id: "JD25", nome: "🚀 Jump 25" },
-        { id: "JD50", nome: "🚀 Jump 50" },
-        { id: "JD75", nome: "🚀 Jump 75" },
-        { id: "JD100", nome: "🚀 Jump 100" },
-        { id: "BOOM300", nome: "💥 Boom 300" },
-        { id: "BOOM500", nome: "💥 Boom 500" },
-        { id: "BOOM1000", nome: "💥 Boom 1000" },
-        { id: "CRASH300", nome: "📉 Crash 300" },
-        { id: "CRASH500", nome: "📉 Crash 500" },
-        { id: "CRASH1000", nome: "📉 Crash 1000" },
-        { id: "ST50", nome: "🎢 Step Index" },
-        { id: "frxEURUSD", nome: "💱 EUR/USD (Euro/Dólar)" },
-        { id: "frxGBPUSD", nome: "💱 GBP/USD (Libra/Dólar)" },
-        { id: "frxUSDJPY", nome: "💱 USD/JPY (Dólar/Iene)" },
-        { id: "frxAUDUSD", nome: "💱 AUD/USD (Dólar Aus./Dólar)" },
-        { id: "frxUSDCAD", nome: "💱 USD/CAD (Dólar/Dólar Can.)" },
-        { id: "frxUSDCHF", nome: "💱 USD/CHF (Dólar/Franco Suíço)" },
-        { id: "frxEURGBP", nome: "💱 EUR/GBP (Euro/Libra)" },
-        { id: "frxEURJPY", nome: "💱 EUR/JPY (Euro/Iene)" },
-        { id: "frxGBPJPY", nome: "💱 GBP/JPY (Libra/Iene)" },
-        { id: "frxXAUUSD", nome: "🪙 OURO (XAU/USD)" },
-        { id: "frxXAGUSD", nome: "🥈 PRATA (XAG/USD)" },
-        { id: "cryBTCUSD", nome: "₿ BITCOIN (BTC/USD)" },
-        { id: "cryETHUSD", nome: "♢ ETHEREUM (ETH/USD)" }
+    const ATIVOS = [
+        { id: "NONE", nome: "❌ DESATIVAR" }, { id: "1HZ10V", nome: "📈 Volatility 10 (1s)" },
+        { id: "1HZ25V", nome: "📈 Volatility 25 (1s)" }, { id: "1HZ50V", nome: "📈 Volatility 50 (1s)" },
+        { id: "1HZ75V", nome: "📈 Volatility 75 (1s)" }, { id: "1HZ100V", nome: "📈 Volatility 100 (1s)" },
+        { id: "R_10", nome: "📊 Volatility 10" }, { id: "R_25", nome: "📊 Volatility 25" },
+        { id: "R_50", nome: "📊 Volatility 50" }, { id: "R_75", nome: "📊 Volatility 75" },
+        { id: "R_100", nome: "📊 Volatility 100" }
     ];
 
     let sockets = [], banca = 0, wins = 0, loss = 0, operando = false;
-    let dadosMercado = {}; 
+    let historicoPreco = {};
 
-    function popularAtivos() {
-        document.querySelectorAll('.sel-ativo').forEach(sel => {
-            LISTA_ATIVOS.forEach(a => { sel.innerHTML += `<option value="${a.id}">${a.nome}</option>`; });
+    function popular() {
+        document.querySelectorAll('.sel-ativo').forEach(s => {
+            ATIVOS.forEach(a => s.innerHTML += `<option value="${a.id}">${a.nome}</option>`);
         });
     }
 
-    function addMsg(conteudo) {
+    function addMsg(html) {
         const chat = document.getElementById('chat');
         const div = document.createElement('div');
         div.className = 'bubble';
-        const hora = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        div.innerHTML = `<span class="admin-tag">admin</span><b style="color:#e67e22">K.c🚀m / Aridelson B.🚀</b><br>${conteudo}<br><small style="opacity:0.5; float:right">${hora}</small><div style="clear:both"></div><a href="#" class="btn-corretora">📱 ACESSAR CORRETORA</a>`;
+        const h = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        div.innerHTML = `<span class="admin-tag">admin</span><b>K.c🚀m / Aridelson B.🚀</b><br>${html}<br><small style="opacity:0.5;float:right">${h}</small><div style="clear:both"></div><a href="#" class="btn-corretora">📱 ACESSAR CORRETORA</a>`;
         chat.appendChild(div); chat.scrollTop = chat.scrollHeight;
     }
 
     function toggleConfig() { document.getElementById('panel-config').style.display = 'block'; }
 
-    function salvarConfig() {
+    function iniciarSistema() {
         banca = parseFloat(document.getElementById('inpBanca').value);
         document.getElementById('banca-header').innerText = `R$ ${banca.toFixed(2)}`;
         document.getElementById('panel-config').style.display = 'none';
-        conectarMercado();
-    }
-
-    function conectarMercado() {
-        sockets.forEach(s => s.close());
-        sockets = []; dadosMercado = {};
         
-        const ativosSelecionados = [
+        sockets.forEach(s => s.close());
+        sockets = [];
+        
+        const selecionados = [
             document.getElementById('selAtivo1').value,
             document.getElementById('selAtivo2').value,
             document.getElementById('selAtivo3').value
         ].filter(id => id !== "NONE");
 
-        const totalAtivos = ativosSelecionados.length;
-
-        ativosSelecionados.forEach(id => {
+        selecionados.forEach(id => {
             const ws = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=1');
             ws.onopen = () => ws.send(JSON.stringify({ ticks: id }));
             ws.onmessage = (m) => {
                 const d = JSON.parse(m.data);
-                if (d.tick) motorAnalise(id, d.tick.quote);
+                if (d.tick) processarEstrategia(id, d.tick.quote);
             };
             sockets.push(ws);
         });
-
+        
         document.getElementById('status-global').innerText = "VIGILÂNCIA ATIVA";
-        addMsg(`<b>SISTEMA LIGADO</b><br>Monitorando ${totalAtivos} ${totalAtivos === 1 ? 'ativo' : 'ativos'} em tempo real.`);
+        addMsg(`<b>SISTEMA LIGADO</b><br>Monitorando ${selecionados.length} ativos.`);
     }
 
-    function motorAnalise(id, preco) {
-        if (!dadosMercado[id]) dadosMercado[id] = { atual: preco, abertura: preco, ultimaMsg: 0 };
-        dadosMercado[id].atual = preco;
+    function processarEstrategia(id, preco) {
+        if (!historicoPreco[id]) historicoPreco[id] = { ultimo: preco, abertura: preco, tempo: Date.now() };
+        
         const agora = Date.now();
-        const seg = new Date().getSeconds();
+        const diff = ((preco - historicoPreco[id].abertura) / historicoPreco[id].abertura) * 100;
+        
+        // Reset da vela a cada 60s (Lógica do Server.js)
+        if (agora - historicoPreco[id].tempo > 60000) {
+            historicoPreco[id].abertura = preco;
+            historicoPreco[id].tempo = agora;
+        }
 
-        if (seg === 0) dadosMercado[id].abertura = preco;
-
-        if (!operando && dadosMercado[id].abertura > 0) {
-            let diff = ((preco - dadosMercado[id].abertura) / dadosMercado[id].abertura) * 100;
-            if (Math.abs(diff) > 0.015 && (agora - dadosMercado[id].ultimaMsg > 40000)) {
-                dadosMercado[id].ultimaMsg = agora;
-                const nomeAtivo = LISTA_ATIVOS.find(a => a.id === id).nome;
-                iniciarSinal(id, nomeAtivo, diff > 0 ? "VENDA" : "CALL");
-            }
+        // Gatilho de Explosão (Regra 1)
+        if (!operando && Math.abs(diff) > 0.015) {
+            executarSinal(id, diff > 0 ? "VENDA" : "CALL");
         }
     }
 
-    function iniciarSinal(id, nome, dir, gale = 0) {
+    function executarSinal(id, dir, gale = 0) {
         operando = true;
-        const entradaPreco = dadosMercado[id].atual;
-        if (gale === 0) {
-            const hPrev = new Date(Date.now() + 2000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'00'});
-            addMsg(`🔍 <b>ALERTA DE SINAL</b><br><br>📊 Ativo: ${nome}<br>🎯 Direção: ${dir}<br>⏰ Entrada prevista: ${hPrev}`);
-        }
+        const nome = ATIVOS.find(a => a.id === id).nome;
+        const precoEntrada = historicoPreco[id].ultimo;
+
+        if (gale === 0) addMsg(`🔍 <b>ALERTA DE SINAL</b><br>📊 Ativo: ${nome}<br>🎯 Direção: ${dir}`);
 
         setTimeout(() => {
-            const hIn = new Date().toLocaleTimeString();
-            const hFim = new Date(Date.now() + 60000).toLocaleTimeString();
-            addMsg(`${gale > 0 ? '🔄 <b>ENTRADA GALE '+gale+'</b>' : '🚀 <b>ENTRADA CONFIRMADA</b>'}<br><br>📊 Ativo: ${nome}<br>🎯 Direção: ${dir === 'CALL' ? 'COMPRA 🟢' : 'VENDA 🔴'}<br>🕒 Início: ${hIn}<br>🏁 Fim: ${hFim}`);
+            addMsg(`${gale > 0 ? '🔄 <b>GALE '+gale : '🚀 <b>ENTRADA CONFIRMADA'}</b><br>📊 Ativo: ${nome}<br>🎯 Direção: ${dir === 'CALL' ? 'COMPRA 🟢' : 'VENDA 🔴'}`);
 
             setTimeout(() => {
-                const saidaPreco = dadosMercado[id].atual;
-                const win = (dir === "CALL" ? saidaPreco > entradaPreco : saidaPreco < entradaPreco);
-                
+                const win = (dir === "CALL" ? historicoPreco[id].ultimo > precoEntrada : historicoPreco[id].ultimo < precoEntrada);
                 if (win) {
-                    wins++; banca += 9.5;
-                    addMsg(`✅ <b>RESULTADO: GREEN</b><br><br>📊 Ativo: ${nome}<br>📈 Placar: 🟢 ${wins}W | 🔴 ${loss}L`);
+                    wins++; addMsg(`✅ <b>RESULTADO: GREEN</b><br>📊 Placar: 🟢 ${wins} | 🔴 ${loss}`);
                     operando = false;
                 } else if (gale < 2) {
-                    iniciarSinal(id, nome, dir, gale + 1);
+                    executarSinal(id, dir, gale + 1);
                 } else {
-                    loss++; banca -= 10;
-                    addMsg(`❌ <b>RESULTADO: RED</b><br><br>📊 Ativo: ${nome}<br>📈 Placar: 🟢 ${wins}W | 🔴 ${loss}L`);
+                    loss++; addMsg(`❌ <b>RESULTADO: RED</b><br>📊 Placar: 🟢 ${wins} | 🔴 ${loss}`);
                     operando = false;
                 }
                 document.getElementById('placar-header').innerText = `🟢 ${wins} | 🔴 ${loss}`;
-                document.getElementById('banca-header').innerText = `R$ ${banca.toFixed(2)}`;
             }, 60000);
         }, gale === 0 ? 2000 : 0);
     }
 
-    window.onload = popularAtivos;
+    window.onload = popular;
 </script>
 </body>
 </html>
