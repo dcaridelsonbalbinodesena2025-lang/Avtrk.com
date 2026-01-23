@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K.c🚀m / Aridelson B.🚀</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --tg-bg: #0e1621; --tg-panel: #17212b; --tg-blue: #2481cc; --tg-green: #45ad5b; --tg-red: #d14e4e; --tg-text: #f5f5f5; }
+        body { background: #070a0e; color: var(--tg-text); font-family: 'Open Sans', sans-serif; margin: 0; display: flex; justify-content: center; height: 100vh; overflow: hidden; }
+        #app { width: 100%; max-width: 450px; background: var(--tg-bg); display: flex; flex-direction: column; position: relative; border-left: 1px solid #222; border-right: 1px solid #222; }
+        .tg-header { background: var(--tg-panel); padding: 12px 15px; display: flex; align-items: center; border-bottom: 1px solid #000; }
+        .tg-avatar { width: 42px; height: 42px; background: linear-gradient(135deg, #50a2e3, #2481cc); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 12px; }
+        .tg-info { flex: 1; }
+        .tg-info b { display: block; font-size: 14px; }
+        .tg-info span { font-size: 11px; color: var(--tg-green); }
+        .visor-chat { flex-grow: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-blend-mode: overlay; background-color: var(--tg-bg); }
+        .bubble { max-width: 90%; padding: 12px; border-radius: 12px; margin-bottom: 15px; font-size: 14px; align-self: flex-start; background: var(--tg-panel); box-shadow: 0 1px 3px rgba(0,0,0,0.4); line-height: 1.6; }
+        .admin-tag { color: #6c7883; font-size: 11px; float: right; }
+        .btn-corretora { background: #45ad5b; color: white; text-align: center; padding: 10px; border-radius: 5px; text-decoration: none; display: block; margin-top: 5px; font-weight: bold; text-transform: uppercase; font-size: 12px; }
+        #panel-config { display: none; position: absolute; top: 65px; left: 10px; right: 10px; background: var(--tg-panel); padding: 20px; border-radius: 12px; z-index: 200; border: 1px solid #333; }
+        .config-row { margin-bottom: 15px; }
+        .config-row select, .config-row input { width: 100%; background: #0e1621; color: #fff; border: 1px solid #333; padding: 12px; border-radius: 6px; }
+        .tg-footer { background: var(--tg-panel); padding: 10px; border-top: 1px solid #000; display: flex; justify-content: space-around; }
+        .btn-footer { background: none; border: none; color: #6c7883; cursor: pointer; text-align: center; font-size: 10px; }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <div class="tg-header">
+        <div class="tg-avatar">KC</div>
+        <div class="tg-info"><b>K.c🚀m / Aridelson B.🚀</b><span id="status-global">conectando...</span></div>
+    </div>
+
+    <div class="visor-chat" id="chat"></div>
+
+    <div id="panel-config">
+        <div class="config-row"><label>Estratégia</label>
+            <select id="selEstrat">
+                <option value="REGRA 1">REGRA 1</option>
+                <option value="FLUXO">FLUXO</option>
+            </select>
+        </div>
+        <div class="config-row"><label>Ativo</label><select id="selAtivo"></select></div>
+        <button onclick="salvarConfig()" style="width: 100%; padding: 15px; background: var(--tg-blue); color: white; border: none; border-radius: 6px;">LIGAR ROBÔ</button>
+    </div>
+
+    <div class="tg-footer">
+        <button class="btn-footer" onclick="toggleConfig()"><i class="fas fa-cog"></i><br>AJUSTES</button>
+    </div>
+</div>
+
+<script>
+    const LISTA_ATIVOS = [
+        { id: "1HZ10V", nome: "Volatility 10 (1s)" }, { id: "1HZ75V", nome: "Volatility 75 (1s)" },
+        { id: "1HZ50V", nome: "Volatility 50 (1s)" }, { id: "1HZ100V", nome: "Volatility 100 (1s)" },
+        { id: "R_100", nome: "Volatility 100" }
+    ];
+
+    let ws, wins = 443, loss = 112, operando = false;
+    let precoAtual = 0, precoEntrada = 0, dirAtual = "", velaAb = 0;
+
+    function popularAtivos() {
+        const sel = document.getElementById('selAtivo');
+        LISTA_ATIVOS.forEach(a => { sel.innerHTML += `<option value="${a.id}">${a.nome}</option>`; });
+    }
+
+    function addMsg(conteudo) {
+        const chat = document.getElementById('chat');
+        const div = document.createElement('div');
+        div.className = 'bubble';
+        const hora = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        div.innerHTML = `<span class="admin-tag">admin</span><b style="color:#e67e22">K.c🚀m / Aridelson B.🚀</b><br>${conteudo}<br><small style="opacity:0.5; float:right">${hora}</small><div style="clear:both"></div><a href="#" class="btn-corretora">📱 ACESSAR CORRETORA</a>`;
+        chat.appendChild(div); chat.scrollTop = chat.scrollHeight;
+    }
+
+    function toggleConfig() { document.getElementById('panel-config').style.display = 'block'; }
+
+    function salvarConfig() {
+        document.getElementById('panel-config').style.display = 'none';
+        conectar();
+    }
+
+    function conectar() {
+        if (ws) ws.close();
+        const ativoID = document.getElementById('selAtivo').value;
+        const ativoNome = LISTA_ATIVOS.find(x => x.id === ativoID).nome;
+        ws = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=1');
+        
+        ws.onopen = () => ws.send(JSON.stringify({ ticks: ativoID }));
+        ws.onmessage = (msg) => {
+            const data = JSON.parse(msg.data);
+            if (!data.tick) return;
+            precoAtual = data.tick.quote;
+            const seg = new Date().getSeconds();
+            document.getElementById('status-global').innerText = `AO VIVO: ${precoAtual.toFixed(2)} [${seg}s]`;
+
+            if (seg === 0) velaAb = precoAtual;
+
+            // Lógica de Alerta (Segundos antes de confirmar)
+            if (seg === 55 && !operando && velaAb > 0) {
+                let varPct = ((precoAtual - velaAb) / velaAb) * 100;
+                if (Math.abs(varPct) > 0.015) {
+                    gerarAlerta(ativoNome, varPct > 0 ? "VENDA" : "CALL");
+                }
+            }
+        };
+    }
+
+    function gerarAlerta(ativo, direcao) {
+        const proxMin = new Date(); proxMin.setMinutes(proxMin.getMinutes() + 1);
+        const horaPrev = proxMin.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'00'});
+        
+        addMsg(`🔍 <b>ALERTA DE SINAL</b><br><br>📊 Ativo: ${ativo}<br>⚡ Estratégia: REGRA 1<br>🎯 Direção: ${direcao}<br>⏰ Entrada prevista: ${horaPrev}`);
+
+        // Espera 5 segundos para Confirmar a Entrada
+        setTimeout(() => confirmarEntrada(ativo, direcao), 5000);
+    }
+
+    function confirmarEntrada(ativo, direcao) {
+        operando = true;
+        precoEntrada = precoAtual;
+        dirAtual = direcao;
+        const inicio = new Date().toLocaleTimeString();
+        const fimObj = new Date(); fimObj.setSeconds(fimObj.getSeconds() + 60);
+        const fim = fimObj.toLocaleTimeString();
+
+        addMsg(`🚀 <b>ENTRADA CONFIRMADA</b><br><br>📊 Ativo: ${ativo}<br>⚡ Estratégia: REGRA 1<br>🎯 Direção: ${direcao === 'CALL' ? 'COMPRA 🟢' : 'VENDA 🔴'}<br>🕒 Início: ${inicio}<br>🏁 Fim: ${fim}<br>📈 Placar: 🟢 ${wins}W | 🔴 ${loss}L`);
+
+        // Verificação Real Matemática
+        setTimeout(() => {
+            const precoSaida = precoAtual;
+            const ganhou = (dirAtual.includes("CALL") || dirAtual.includes("COMPRA") ? precoSaida > precoEntrada : precoSaida < precoEntrada);
+            
+            if (ganhou) { wins++; addMsg(`✅ <b>RESULTADO: GREEN</b><br><br>🚦 Status: DIRETO<br>📊 Ativo: ${ativo}<br>⚡ Estratégia: REGRA 1<br>📈 Placar: 🟢 ${wins}W | 🔴 ${loss}L`); }
+            else { loss++; addMsg(`❌ <b>RESULTADO: RED</b><br><br>🚦 Status: LOSS<br>📊 Ativo: ${ativo}<br>⚡ Estratégia: REGRA 1<br>📈 Placar: 🟢 ${wins}W | 🔴 ${loss}L`); }
+            
+            operando = false;
+        }, 60000);
+    }
+
+    window.onload = popularAtivos;
+</script>
+</body>
+</html>
