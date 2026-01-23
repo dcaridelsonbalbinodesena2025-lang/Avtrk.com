@@ -144,23 +144,41 @@
             sockets.push(ws);
         });
         document.getElementById('status-global').innerText = "conectado";
-    }
-
     function monitorar(id, preco) {
-        if (!dadosMercado[id]) dadosMercado[id] = { atual: preco, abertura: preco };
+        if (!dadosMercado[id]) {
+            dadosMercado[id] = { atual: preco, abertura: preco, ultimaMsg: 0 };
+            const nomeAt = LISTA_ATIVOS.find(a => a.id === id).nome;
+            addMsg(`📡 <b>VARREDURA ATIVA:</b> ${nomeAt}`);
+        }
+        
         dadosMercado[id].atual = preco;
+        const agora = Date.now();
         const seg = new Date().getSeconds();
 
-        if (seg === 0) dadosMercado[id].abertura = preco;
+        // Reseta o preço de referência no início de cada minuto (Vela de M1)
+        if (seg === 0) {
+            dadosMercado[id].abertura = preco;
+        }
 
-        if (seg === 56 && !operando) {
-            let varPct = ((preco - dadosMercado[id].abertura) / dadosMercado[id].abertura) * 100;
-            if (Math.abs(varPct) > 0.02) {
+        // Se não estivermos em operação e já tivermos um preço de abertura
+        if (!operando && dadosMercado[id].abertura > 0) {
+            let diff = ((preco - dadosMercado[id].abertura) / dadosMercado[id].abertura) * 100;
+            let variacaoAbsoluta = Math.abs(diff);
+
+            // GATILHO IGUAL AO DO GRUPO: 
+            // Se a força do preço atingir o nível da estratégia em QUALQUER segundo
+            // E se já passou pelo menos 30 segundos desde o último alerta deste ativo
+            if (variacaoAbsoluta > 0.012 && (agora - dadosMercado[id].ultimaMsg > 30000)) {
+                dadosMercado[id].ultimaMsg = agora;
                 const nome = LISTA_ATIVOS.find(a => a.id === id).nome;
-                iniciarSinal(id, nome, varPct > 0 ? "VENDA" : "CALL");
+                
+                // Formata a direção conforme a Regra 1 (Força de Explosão)
+                let direcao = diff > 0 ? "VENDA" : "CALL"; 
+                iniciarSinal(id, nome, direcao);
             }
         }
     }
+
 
     function iniciarSinal(id, nome, dir, gale = 0) {
         operando = true;
